@@ -58,7 +58,11 @@ app.post('/api/pedido', async (req, res) => {
 });
 
 // Ruta comodín para asegurar que cargue el index.html
-app.get('*', (req, res) => {
+// Cambia esto:
+// app.get('*', (req, res) => { ... });
+
+// Por esto (la nueva sintaxis de Express 5):
+app.get('/:any*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
