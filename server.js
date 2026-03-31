@@ -62,7 +62,13 @@ app.post('/api/pedido', async (req, res) => {
 // app.get('*', (req, res) => { ... });
 
 // Por esto (la nueva sintaxis de Express 5):
-app.get('/:any*', (req, res) => {
+// REEMPLAZA TU RUTA FINAL POR ESTA:
+app.get('*', (req, res, next) => {
+    // Si la ruta empieza por /api, deja que pase a los endpoints
+    if (req.path.startsWith('/api')) {
+        return next();
+    }
+    // Para todo lo demás, envía el index.html
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
