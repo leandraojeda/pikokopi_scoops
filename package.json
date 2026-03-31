@@ -1,18 +1,22 @@
 {
   "name": "scoops-y-capsulas",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Tienda de pedidos para Bolivia",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Leandra Ojeda",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "express": "^5.2.1",
+    "express": "^5.0.0",
     "sqlite": "^5.1.1",
-    "sqlite3": "^6.0.1"
+    "sqlite3": "^5.1.7"
   }
 }
