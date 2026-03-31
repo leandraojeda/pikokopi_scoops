@@ -5,50 +5,62 @@ const path = require('path');
 
 const app = express();
 app.use(express.json());
-app.use(express.static('public'));
+
+// LA CORRECCIÓN: Usar path.join para que Render encuentre siempre la carpeta public
+app.use(express.static(path.join(__dirname, 'public')));
 
 let db;
 
-// Inicializar Base de Datos
+// Inicializar Base de Datos (con ruta absoluta para evitar errores de escritura)
 (async () => {
-    db = await open({
-        filename: './pedidos.db',
-        driver: sqlite3.Database
-    });
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS pedidos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre_completo TEXT,
-            ci TEXT,
-            ciudad TEXT,
-            productos TEXT,
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
+    try {
+        db = await open({
+            filename: path.join(__dirname, 'pedidos.db'),
+            driver: sqlite3.Database
+        });
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS pedidos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre_completo TEXT,
+                ci TEXT,
+                ciudad TEXT,
+                productos TEXT,
+                fecha DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log("Base de datos SQLite lista ✅");
+    } catch (error) {
+        console.error("Error al abrir la base de datos:", error);
+    }
 })();
 
-// Endpoint para guardar pedido y generar Link
+// Endpoint para guardar pedido
 app.post('/api/pedido', async (req, res) => {
     try {
         const { nombre, ci, ciudad, capsulas, cucharas } = req.body;
         const productos = `${capsulas} Cápsulas y ${cucharas} Cucharas`;
 
-        // Guardar en SQLite
         await db.run(
             'INSERT INTO pedidos (nombre_completo, ci, ciudad, productos) VALUES (?, ?, ?, ?)',
             [nombre, ci, ciudad, productos]
         );
 
-        // Link de WhatsApp Business (Usa tu número real aquí)
-        const telefono = "591XXXXXXXX"; 
-        const mensaje = `*PEDIDO NUEVO*%0A*Nombre:* ${nombre}%0A*CI:* ${ci}%0A*Ciudad:* ${ciudad}%0A*Pedido:* ${productos}`;
+        // Reemplaza el 591XXXXXXXX por tu número real de WhatsApp
+        const telefono = "59178619934"; // Ejemplo
+        const mensaje = encodeURIComponent(`*PEDIDO NUEVO*\n*Nombre:* ${nombre}\n*CI:* ${ci}\n*Ciudad:* ${ciudad}\n*Pedido:* ${productos}`);
         const url = `https://wa.me/${telefono}?text=${mensaje}`;
 
         res.json({ success: true, url });
     } catch (err) {
+        console.error("Error en POST /api/pedido:", err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
+// Ruta comodín para asegurar que cargue el index.html
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));
