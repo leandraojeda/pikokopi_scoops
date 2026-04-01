@@ -1,52 +1,28 @@
-function cambiarCantidad(id, valor) {
-    const input = document.getElementById(id);
-    let actual = parseInt(input.value);
-    actual += valor;
-    if (actual < 0) actual = 0;
-    input.value = actual;
-}
+function verDetalle(id) {
+    actual = productosData.find(p => p.id === id);
+    
+    // 1. Ocultar todas las sub-vistas primero
+    document.querySelectorAll('.sub-view').forEach(v => v.style.display = 'none');
 
-async function enviarPedido() {
-    const payload = {
-        nombre: document.getElementById('nombre').value.trim(),
-        ci: document.getElementById('ci').value.trim(),
-        ciudad: document.getElementById('ciudad').value,
-        capsulas: parseInt(document.getElementById('capsulas').value) || 0,
-        cucharas: parseInt(document.getElementById('cucharas').value) || 0
-    };
-
-    // Validación: que tenga nombre, ciudad y al menos un producto
-    if(!payload.nombre || !payload.ciudad || (payload.capsulas === 0 && payload.cucharas === 0)) {
-        alert("⚠️ Por favor selecciona productos y completa tus datos antes de enviar.");
-        return;
+    // 2. Mostrar solo la que corresponde a la categoría
+    if (actual.categoria === 'scoops') {
+        document.getElementById('view-scoops').style.display = 'block';
+    } else if (actual.categoria === 'ofertas') {
+        document.getElementById('view-ofertas').style.display = 'block';
+        // Calculamos un precio tachado falso (30% más)
+        document.getElementById('precio-tachado').innerText = (actual.v[0].p * 1.3).toFixed(2) + " BS";
+    } else if (actual.categoria === 'combos') {
+        document.getElementById('view-combos').style.display = 'block';
     }
 
-    try {
-        // Mostramos un mensaje de "Enviando..." en el botón
-        const btn = document.querySelector('.btn-enviar');
-        const originalText = btn.innerText;
-        btn.innerText = "PROCESANDO...";
-        btn.disabled = true;
-
-        const response = await fetch('/api/pedido', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            // Si el servidor responde bien, nos vamos a WhatsApp
-            window.location.href = data.url;
-        } else {
-            alert("Hubo un error al procesar el pedido.");
-            btn.innerText = originalText;
-            btn.disabled = false;
-        }
-    } catch (e) {
-        console.error("Error:", e);
-        alert("No se pudo conectar con el servidor. Revisa tu conexión.");
-        document.querySelector('.btn-enviar').disabled = false;
-    }
+    // 3. Llenar los datos básicos (Foto, Título, Select)
+    document.getElementById('sub-img').src = actual.imagen;
+    document.getElementById('sub-titulo').innerText = actual.titulo;
+    
+    // Llenar el select correspondiente (buscamos el select activo)
+    const activeSelect = document.querySelector('.sub-view[style*="block"] select');
+    activeSelect.innerHTML = actual.v.map(v => `<option value="${v.n}" data-p="${v.p}">${v.n}</option>`).join('');
+    
+    actualizarPrecioSub();
+    document.getElementById('sub-pestana').style.display = 'block';
 }

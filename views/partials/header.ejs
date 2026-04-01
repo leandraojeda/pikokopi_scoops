@@ -1,0 +1,33 @@
+<div class="ticker-wrapper">
+    <div class="ticker">
+        <span class="ticker-item">🚚 ENVÍOS A TODA BOLIVIA: SUCRE • POTOSÍ • LA PAZ • COCHABAMBA • SANTA CRUZ • TARIJA • ORURO • BENI • PANDO 🇧🇴 </span>
+        <span class="ticker-item">✨ PIKO KOPI SHOP: SCOOPS, CÁPSULAS Y COSMÉTICOS KAWAII ✨ </span>
+        <span class="ticker-item">🚚 ENVÍOS A TODA BOLIVIA: SUCRE • POTOSÍ • LA PAZ • COCHABAMBA • SANTA CRUZ • TARIJA • ORURO • BENI • PANDO 🇧🇴 </span>
+    </div>
+</div>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/" class="logo">
+            PIKO KOPI <span class="bolivia">Bolivia</span>
+        </a>
+        
+        <div class="nav-search-placeholder">
+            <input type="text" placeholder="Buscar scoops, Sanrio..." class="search-input">
+        </div>
+
+        <div class="cart-status" onclick="abrirResumenCarrito()">
+            <div class="cart-icon-wrapper">
+                🛒 <span id="cart-count" class="badge">0</span>
+            </div>
+            <span id="cart-total-preview" class="total-text">0.00 BS</span>
+        </div>
+    </div>
+</nav>
+
+<div class="sub-nav">
+    <a href="#" class="sub-link active" onclick="filtrar('todo', this)">Todo</a>
+    <a href="#" class="sub-link" onclick="filtrar('ofertas', this)">🔥 Ofertas</a>
+    <a href="#" class="sub-link" onclick="filtrar('scoops', this)">🍨 Scoops</a>
+    <a href="#" class="sub-link" onclick="filtrar('combos', this)">🎁 Combos</a>
+</div>
