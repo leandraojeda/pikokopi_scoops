@@ -1,101 +1,127 @@
+require('dotenv').config();
 const express = require('express');
+const { google } = require('googleapis');
+const PDFDocument = require('pdfkit');
 const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
-const { open } = require('sqlite');
 
 const app = express();
 
-// --- 1. CONFIGURACIÓN DEL MOTOR Y CARPETAS ---
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-
-// VITAL: Esta línea conecta tus estilos (styles.css) e imágenes (img/)
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Middleware para leer datos de formularios y JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- 2. BASE DE DATOS SQLITE ---
-let db;
+const SPREADSHEET_ID = '1bIaOsBjsI9m-5l2uGFi48SQGEjQFtnYt8T4rH5HFElg'; 
 
-(async () => {
-    // Abrimos la base de datos
-    db = await open({
-        filename: './database.sqlite',
-        driver: sqlite3.Database
-    });
+const auth = new google.auth.GoogleAuth({
+    credentials: {
+        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        private_key: process.env.GOOGLE_PRIVATE_KEY ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined
+    },
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+});
 
-    // Creamos la tabla con la columna 'categoria' para tus subpestañas
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS productos (
-            id TEXT PRIMARY KEY,
-            titulo TEXT,
-            imagen TEXT,
-            variantes TEXT,
-            categoria TEXT
-        )
-    `);
+const misProductos = [
+    { id: 'p1', titulo: 'Scoop Piko (Cápsula)', precio: 35, cat: 'scoops', img: '/img/scoop.jpg', variantes: [{ nombre: 'Simple', precio: 35 }, { nombre: 'Doble', precio: 60 }] },
+    { id: 'p2', titulo: 'Stickers Piko Kopi', precio: 15, cat: 'productos', img: '/img/stickers.jpg', variantes: [] }
+];
 
-    // Verificamos si está vacía para insertar tus productos de Piko Kopi
-    const count = await db.get('SELECT COUNT(*) as count FROM productos');
+app.get('/', (req, res) => {
+    res.render('index', { productos: misProductos }); 
+});
+
+app.post('/confirmar-pedido', async (req, res) => {
+    const data = req.body;
     
-    if (count.count === 0) {
-        console.log("🛠️ Base de datos nueva. Insertando productos...");
-        
-        const productosIniciales = [
-            // [ID, Título, Imagen, Variantes (JSON), Categoría]
-            ['s1', 'Piko Scoop Kawaii Box', '/img/scoops.png', JSON.stringify([{n:'1 Scoop', p:100}, {n:'5 Scoops', p:460}]), 'scoops'],
-            ['o1', 'Pack Oferta Snoopy', '/img/snoopy.png', JSON.stringify([{n:'Pack Estándar', p:80}]), 'ofertas'],
-            ['c1', 'Combo Mega 1+2 Especial', '/img/1s2c.png', JSON.stringify([{n:'Combo Completo', p:150}]), 'combos'],
-            ['s2', 'Scoop Glitter Edition', '/img/glitter.png', JSON.stringify([{n:'1 Scoop', p:120}]), 'scoops'],
-            ['o2', 'Cápsulas en Liquidación', '/img/capsulas.png', JSON.stringify([{n:'3 Unidades', p:75}]), 'ofertas']
-        ];
+    // Limpieza de códigos raros como Ø<ß8
+    const limpiarTexto = (t) => t ? String(t).replace(/[^\x20-\x7EáéíóúÁÉÍÓÚñÑ,()]/g, '') : '';
 
-        for (const p of productosIniciales) {
-            await db.run('INSERT INTO productos (id, titulo, imagen, variantes, categoria) VALUES (?, ?, ?, ?, ?)', p);
-        }
-        console.log("✅ Productos cargados correctamente.");
-    }
-})();
-
-// --- 3. RUTAS ---
-
-app.get('/', async (req, res) => {
     try {
-        const rows = await db.all('SELECT * FROM productos');
-        
-        const productos = rows.map(r => {
-            let variantesParsed;
-            try {
-                // Si variantes existe y no es "undefined", lo parseamos
-                variantesParsed = (r.variantes && r.variantes !== "undefined") 
-                    ? JSON.parse(r.variantes) 
-                    : [{n: 'Opción única', p: 0}]; // Valor por defecto por seguridad
-            } catch (e) {
-                console.error(`Error parseando variantes del producto ${r.id}:`, e);
-                variantesParsed = [{n: 'Error de datos', p: 0}];
-            }
+        const sheets = google.sheets({ version: 'v4', auth });
 
-            return {
-                ...r,
-                v: variantesParsed
-            };
+        // 1. REGISTRAR EN EXCEL
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: 'Sheet1!A:G', 
+            valueInputOption: 'USER_ENTERED',
+            requestBody: {
+                values: [[
+                    new Date().toLocaleString('es-BO'), 
+                    limpiarTexto(data.nombre), 
+                    data.celular, 
+                    data.ciudad, 
+                    data.transporte, 
+                    data.total, 
+                    limpiarTexto(data.productosTexto) // Texto simple para el Excel
+                ]]
+            }
         });
 
-        res.render('index', { productos });
-    } catch (error) {
-        console.error("Error crítico en la ruta principal:", error);
-        res.status(500).send("Error interno: Revisa la consola de Node.");
+        // 2. GENERAR PDF CON PRECIOS REALES
+        const doc = new PDFDocument({ margin: 40, size: 'A5' });
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=Recibo_PikoKopi.pdf`);
+        doc.pipe(res);
+
+        // HEADER
+        doc.fillColor('#ffb7c5').fontSize(24).text('PIKO KOPI 🌸', { align: 'center', weight: 'bold' });
+        doc.fontSize(9).fillColor('#aaaaaa').text('COMPROBANTE DE PEDIDO', { align: 'center', characterSpacing: 1 });
+        doc.moveDown(1.5);
+
+        // CAJA CLIENTE
+        doc.roundedRect(40, 90, 340, 70, 8).fill('#fff5f7').stroke('#ffdae0');
+        doc.fillColor('#ff85a2').fontSize(8).text('DETALLES DEL ENVÍO', 50, 100, { weight: 'bold' });
+        doc.fillColor('#444444').fontSize(9);
+        doc.text(`Cliente: ${limpiarTexto(data.nombre)}`, 50, 115);
+        doc.text(`Ciudad: ${data.ciudad}`, 50, 130);
+        doc.text(`WhatsApp: ${data.celular}`, 210, 115);
+        doc.text(`Envío: ${data.transporte}`, 210, 130);
+
+        doc.moveDown(4.5);
+
+        // TABLA PRODUCTOS
+        const tableTop = 180;
+        doc.fillColor('#ff85a2').fontSize(9);
+        doc.text('PRODUCTO', 50, tableTop, { weight: 'bold' });
+        doc.text('CANT.', 260, tableTop, { width: 40, align: 'center' });
+        doc.text('PRECIO', 320, tableTop, { width: 60, align: 'right' });
+        
+        doc.moveTo(40, tableTop + 12).lineTo(380, tableTop + 12).strokeColor('#ffdae0').stroke();
+
+        let currentY = tableTop + 22;
+        
+        // Usamos la lista de objetos que enviaremos desde el front
+        const listaParaPDF = data.carrito || [];
+
+        doc.fillColor('#444444').fontSize(9);
+        listaParaPDF.forEach(item => {
+            const nombreCompleto = `${item.titulo} ${item.variante ? '('+item.variante+')' : ''}`;
+            doc.text(limpiarTexto(nombreCompleto), 50, currentY, { width: 200 });
+            doc.text('1', 260, currentY, { width: 40, align: 'center' });
+            doc.text(`${item.precio} BS`, 320, currentY, { width: 60, align: 'right' });
+            currentY += 15;
+
+            if (currentY > 480) doc.addPage();
+        });
+
+        // TOTAL FINAL
+        currentY += 10;
+        doc.roundedRect(220, currentY, 160, 30, 5).fill('#ff85a2');
+        doc.fillColor('#ffffff').fontSize(12).text(`TOTAL: ${data.total}`, 230, currentY + 10, { 
+            width: 140, align: 'right', weight: 'bold'
+        });
+
+        doc.end();
+
+    } catch (e) {
+        console.error("❌ ERROR:", e.message);
+        if (!res.headersSent) res.status(500).send("Error");
     }
 });
 
-// --- 4. INICIO DEL SERVIDOR ---
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`\n******************************************`);
-    console.log(`🚀 PIKO KOPI MARKETPLACE ACTIVO`);
-    console.log(`🔗 URL: http://localhost:${PORT}`);
-    console.log(`📂 Directorio: ${__dirname}`);
-    console.log(`******************************************\n`);
+    console.log(`\n🌸 Piko Kopi en http://localhost:${PORT}`);
 });

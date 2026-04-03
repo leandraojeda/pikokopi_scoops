@@ -1,33 +1,27 @@
 <div class="ticker-wrapper">
-    <div class="ticker">
-        <span class="ticker-item">🚚 ENVÍOS A TODA BOLIVIA: SUCRE • POTOSÍ • LA PAZ • COCHABAMBA • SANTA CRUZ • TARIJA • ORURO • BENI • PANDO 🇧🇴 </span>
-        <span class="ticker-item">✨ PIKO KOPI SHOP: SCOOPS, CÁPSULAS Y COSMÉTICOS KAWAII ✨ </span>
-        <span class="ticker-item">🚚 ENVÍOS A TODA BOLIVIA: SUCRE • POTOSÍ • LA PAZ • COCHABAMBA • SANTA CRUZ • TARIJA • ORURO • BENI • PANDO 🇧🇴 </span>
+    <div class="ticker-content">
+        <div class="ticker-item"><span>✨</span> ENVIAMOS A TODO EL PAÍS:</div>
+        <div class="ticker-item">📍 SUCRE (Entrega hoy)</div>
+        <div class="ticker-item">📍 LA PAZ / EL ALTO</div>
+        <div class="ticker-item">📍 SANTA CRUZ</div>
+        <div class="ticker-item">📍 COCHABAMBA</div>
+        <div class="ticker-item">📍 POTOSÍ</div>
+        <div class="ticker-item">📍 ORURO</div>
+        <div class="ticker-item">📍 TARIJA (Bermejo - Yacuiba - Villamontes)</div>
+        <div class="ticker-item">📍 BENI (Trinidad - Riberalta)</div>
+        <div class="ticker-item">📍 PANDO (Cobija)</div>
+        <div class="ticker-item">📍 CHUQUISACA (Camargo - Padilla - Monteagudo)</div>
+        <div class="ticker-item"><span>💖</span> PIKO KOPI SHOP BOLIVIA</div>
+        <div class="ticker-item">📍 SUCRE</div>
+        <div class="ticker-item">📍 EL ALTO</div>
+        <div class="ticker-item">📍 SANTA CRUZ</div>
     </div>
 </div>
 
 <nav class="navbar">
-    <div class="nav-container">
-        <a href="/" class="logo">
-            PIKO KOPI <span class="bolivia">Bolivia</span>
-        </a>
-        
-        <div class="nav-search-placeholder">
-            <input type="text" placeholder="Buscar scoops, Sanrio..." class="search-input">
-        </div>
-
-        <div class="cart-status" onclick="abrirResumenCarrito()">
-            <div class="cart-icon-wrapper">
-                🛒 <span id="cart-count" class="badge">0</span>
-            </div>
-            <span id="cart-total-preview" class="total-text">0.00 BS</span>
-        </div>
-    </div>
+    <a href="/" class="logo">PIKO <span>KOPI</span></a>
+    
+    <button class="nav-icons" onclick="irACheckout()">
+        🛒 <span id="cart-count">0</span>
+    </button>
 </nav>
-
-<div class="sub-nav">
-    <a href="#" class="sub-link active" onclick="filtrar('todo', this)">Todo</a>
-    <a href="#" class="sub-link" onclick="filtrar('ofertas', this)">🔥 Ofertas</a>
-    <a href="#" class="sub-link" onclick="filtrar('scoops', this)">🍨 Scoops</a>
-    <a href="#" class="sub-link" onclick="filtrar('combos', this)">🎁 Combos</a>
-</div>

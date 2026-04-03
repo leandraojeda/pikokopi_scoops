@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalizar Pedido | Piko Kopi 🌸</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root { --piko-pink: #ff85a2; --piko-bg: #fffafb; --piko-pastel: #ffe4e9; }
+        body { background-color: var(--piko-bg); font-family: 'Poppins', sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .checkout-card { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(255,133,162,0.1); width: 100%; max-width: 500px; border: 2px solid var(--piko-pastel); }
+        h2 { color: var(--piko-pink); text-align: center; font-weight: 800; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; color: #555; }
+        input, select { width: 100%; padding: 12px; border: 2px solid var(--piko-pastel); border-radius: 12px; box-sizing: border-box; font-family: 'Poppins'; }
+        .info-envio { background: var(--piko-bg); padding: 15px; border-radius: 15px; border: 1px dashed var(--piko-pink); margin-top: 10px; }
+        .btn-final { width: 100%; background: var(--piko-pink); color: white; border: none; padding: 18px; border-radius: 50px; font-weight: 800; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        .btn-final:disabled { background: #ccc; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="checkout-card">
+    <h2>✨ Datos de Envío ✨</h2>
+    
+    <form id="form-piko-final">
+        <div class="form-group">
+            <label>Nombre Completo</label>
+            <input type="text" id="f-nombre" placeholder="¿A quién entregamos?" required>
+        </div>
+
+        <div class="form-group">
+            <label>WhatsApp / Celular</label>
+            <input type="tel" id="f-celular" placeholder="Ej. 77143374" required>
+        </div>
+
+        <div class="form-group">
+            <label>Ciudad de Destino</label>
+            <select id="f-ciudad" onchange="gestionarLogicaEnvio()">
+                <option value="Sucre">Sucre (Capital)</option>
+                <option value="La Paz">La Paz</option>
+                <option value="El Alto">El Alto</option>
+                <option value="Santa Cruz">Santa Cruz</option>
+                <option value="Cochabamba">Cochabamba</option>
+                <option value="Quillacollo">Quillacollo</option>
+                <option value="Oruro">Oruro</option>
+                <option value="Potosi">Potosí</option>
+                <option value="Uyuni">Uyuni</option>
+                <option value="Tupiza">Tupiza</option>
+                <option value="Villazon">Villazón</option>
+                <option value="Tarija">Tarija</option>
+                <option value="Bermejo">Bermejo</option>
+                <option value="Yacuiba">Yacuiba</option>
+                <option value="Beni">Beni (Trinidad)</option>
+                <option value="Pando">Pando (Cobija)</option>
+            </select>
+        </div>
+
+        <div id="seccion-envio" class="info-envio">
+            <div id="opciones-sucre">
+                <label>Opción de Entrega en Sucre:</label>
+                <select id="envio-sucre">
+                    <option value="Plaza 25 de Mayo (Gratis)">Recoger en la Plaza 25 de Mayo (Gratis)</option>
+                    <option value="Delivery (10 BS)">Delivery a domicilio (10 BS)</option>
+                </select>
+            </div>
+
+            <div id="opciones-nacional" class="hidden">
+                <label>Transportadora Sugerida:</label>
+                <select id="envio-nacional" onchange="verificarOtroTransporte()">
+                    </select>
+                
+                <input type="text" id="otro-transporte" class="hidden" placeholder="Escribe el nombre de tu transportadora" style="margin-top:10px;">
+
+                <label style="margin-top:10px;">Método de Pago de Envío:</label>
+                <select id="pago-envio">
+                    <option value="Pago en Destino (Pagas allá)">Pago en Destino (Pagas allá)</option>
+                    <option value="Pagado aquí (Incluir en QR)">Pagado aquí (Incluir en QR)</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <p>Total Productos: <span id="total-txt" style="font-weight: 800; color: var(--piko-pink);">0</span> BS</p>
+        </div>
+
+        <button type="button" class="btn-final" id="btn-piko" onclick="confirmarTodo()">
+            CONFIRMAR PEDIDO 🌸
+        </button>
+    </form>
+</div>
+
+<script>
+    const totalVenta = localStorage.getItem('pikoTotal') || "0";
+    const carrito = JSON.parse(localStorage.getItem('pikoCarrito')) || [];
+    document.getElementById('total-txt').innerText = totalVenta;
+
+    const transportadoras = {
+        "La Paz": ["Trans Copacabana", "El Dorado", "Bolivar", "Otro (Escribir)"],
+        "El Alto": ["Trans Copacabana MEM", "Tours El Inca", "Otro (Escribir)"],
+        "Santa Cruz": ["Trans Copacabana S.A.", "Flota Bolivar", "Otro (Escribir)"],
+        "Cochabamba": ["Trans Copacabana", "Flota Cochabamba", "Otro (Escribir)"],
+        "Tarija": ["Flota El Chaco", "Expreso Tarija", "Otro (Escribir)"],
+        "Yacuiba": ["Flota Yacuiba", "Trans Narvaez", "Otro (Escribir)"],
+        "Villazon": ["Trans del Sur", "Otro (Escribir)"],
+        "Uyuni": ["Trans Salvador", "Otro (Escribir)"],
+        "General": ["Trans Copacabana", "El Dorado", "Bolivar", "Otro (Escribir)"]
+    };
+
+    function gestionarLogicaEnvio() {
+        const ciudad = document.getElementById('f-ciudad').value;
+        const divSucre = document.getElementById('opciones-sucre');
+        const divNacional = document.getElementById('opciones-nacional');
+        const selectNacional = document.getElementById('envio-nacional');
+
+        if (ciudad === "Sucre") {
+            divSucre.classList.remove('hidden');
+            divNacional.classList.add('hidden');
+        } else {
+            divSucre.classList.add('hidden');
+            divNacional.classList.remove('hidden');
+            
+            // Cargar transportadoras según ciudad
+            const opciones = transportadoras[ciudad] || transportadoras["General"];
+            selectNacional.innerHTML = opciones.map(o => `<option value="${o}">${o}</option>`).join('');
+            verificarOtroTransporte();
+        }
+    }
+
+    function verificarOtroTransporte() {
+        const valor = document.getElementById('envio-nacional').value;
+        const inputOtro = document.getElementById('otro-transporte');
+        if (valor === "Otro (Escribir)") {
+            inputOtro.classList.remove('hidden');
+        } else {
+            inputOtro.classList.add('hidden');
+        }
+    }
+
+    async function confirmarTodo() {
+        const btn = document.getElementById('btn-piko');
+        const ciudad = document.getElementById('f-ciudad').value;
+        const nombre = document.getElementById('f-nombre').value;
+        const celular = document.getElementById('f-celular').value;
+
+        if(!nombre || !celular) return Swal.fire("¡Espera!", "Completa tus datos 🌸", "warning");
+
+        let transporteElegido = "";
+        let pagoEnvio = "N/A (Sucre)";
+
+        if (ciudad === "Sucre") {
+            transporteElegido = document.getElementById('envio-sucre').value;
+        } else {
+            const tSelect = document.getElementById('envio-nacional').value;
+            transporteElegido = (tSelect === "Otro (Escribir)") ? document.getElementById('otro-transporte').value : tSelect;
+            pagoEnvio = document.getElementById('pago-envio').value;
+        }
+
+        const data = {
+            nombre,
+            celular,
+            ciudad,
+            transporte: transporteElegido,
+            pago: pagoEnvio,
+            total: totalVenta + " BS",
+            productos: carrito.map(p => `${p.titulo} (${p.variante})`).join(', ')
+        };
+
+        try {
+            btn.disabled = true;
+            const res = await fetch('/confirmar-pedido', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            if ((await res.json()).success) {
+                await Swal.fire("¡Éxito! ✨", "Tu pedido se guardó en el Excel de Piko Kopi.", "success");
+                localStorage.clear();
+                window.location.href = "/";
+            }
+        } catch (e) {
+            Swal.fire("Error", "No se pudo conectar con el servidor", "error");
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // Iniciar lógica
+    gestionarLogicaEnvio();
+</script>
+</body>
+</html>
