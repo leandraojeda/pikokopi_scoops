@@ -7,12 +7,12 @@ const cors = require('cors');
 
 const app = express();
 
-// --- CONFIGURACIÓN DE MIDDLEWARES Y RUTAS ESTÁTICAS ---
+// --- CONFIGURACIÓN DE MIDDLEWARES ---
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// IMPORTANTE: Definir rutas absolutas para que Render encuentre tus archivos
+// Rutas estáticas para CSS e Imágenes
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -20,9 +20,9 @@ app.set('views', path.join(__dirname, 'views'));
 // --- CONFIGURACIÓN DE GOOGLE SHEETS ---
 const SPREADSHEET_ID = '1bIaOsBjsI9m-5l2uGFi48SQGEjQFtnYt8T4rH5HFElg';
 
-// Limpieza de la llave privada (Solución definitiva para el error 500 en Render)
+// TRUCO PARA RENDER: Convierte los \n de texto en saltos de línea reales
 const privateKey = process.env.GOOGLE_PRIVATE_KEY 
-    ? process.env.GOOGLE_PRIVATE_KEY.split(String.raw`\n`).join('\n') 
+    ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n') 
     : undefined;
 
 const auth = new google.auth.GoogleAuth({
@@ -33,10 +33,7 @@ const auth = new google.auth.GoogleAuth({
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
-// --- BASE DE DATOS EN MEMORIA ---
-let pedidosGuardados = [];
-
-// --- LISTA DE PRODUCTOS (Indispensable para que el "/" no dé error) ---
+// --- LISTA DE PRODUCTOS ---
 const listaProductos = [
     { id: '1', titulo: 'Notas Cabeza Snoopy', cat: 'productos', precio: 12, img: '/img/notas-snoopy.jpg' },
     { id: '2', titulo: 'Binder Sanrio', cat: 'productos', precio: 26, img: '/img/binder-sanrio.jpg' },
@@ -54,6 +51,8 @@ const listaProductos = [
     { id: '14', titulo: 'Pack de My Melody', cat: 'packs', precio: 90, img: '/img/pack-mymelody.jpg' }
 ];
 
+let pedidosGuardados = [];
+
 // --- FUNCIÓN DISEÑO PDF ---
 function dibujarPDF(doc, data) {
     const margin = 30;
@@ -64,57 +63,77 @@ function dibujarPDF(doc, data) {
     doc.fillColor('#2c2c2c').fontSize(30).font('Helvetica-Bold').text('Recibo Piko Kopi', { align: 'center' });
     doc.fillColor(colorPrincipal).fontSize(20).text('#' + data.nro, { align: 'center' });
     doc.moveDown();
-    doc.fontSize(10).fillColor('#000').text(`Cliente: ${data.nombre}`);
+    doc.fontSize(10).fillColor('#000').font('Helvetica').text(`Cliente: ${data.nombre}`);
     doc.text(`Celular: ${data.celular}`);
     doc.text(`Ciudad: ${data.ciudad}`);
     doc.moveDown();
     doc.text('-------------------------------------------');
-    data.carrito.forEach(item => {
-        doc.text(`${item.titulo} x${item.cantidad} - ${item.subtotal} BS`);
-    });
+    
+    if (data.carrito && Array.isArray(data.carrito)) {
+        data.carrito.forEach(item => {
+            doc.text(`${item.titulo} x${item.cantidad} - ${item.subtotal.toFixed(2)} BS`);
+        });
+    }
+    
     doc.text('-------------------------------------------');
-    doc.fontSize(14).fillColor(colorPrincipal).text(`TOTAL: ${data.total} BS`, { align: 'right' });
+    doc.fontSize(14).fillColor(colorPrincipal).font('Helvetica-Bold').text(`TOTAL: ${data.total} BS`, { align: 'right' });
 }
 
 // --- RUTAS ---
+
 app.get('/', (req, res) => {
     res.render('index', { productos: listaProductos });
 });
 
 app.post('/confirmar-pedido', async (req, res) => {
     const data = req.body;
+    console.log("Procesando pedido:", data.nro);
+
     try {
         // 1. Guardar en memoria
-        pedidosGuardados.push({ ...data, fecha: new Date().toLocaleString() });
+        pedidosGuardados.push({ ...data, fecha: new Date().toLocaleString('es-BO') });
 
-        // 2. Google Sheets con validación de errores
+        // 2. Intentar guardar en Google Sheets
         try {
             const sheets = google.sheets({ version: 'v4', auth });
             await sheets.spreadsheets.values.append({
                 spreadsheetId: SPREADSHEET_ID,
-                range: 'Sheet1!A:G',
+                range: 'Sheet1!A:G', // ASEGÚRATE QUE TU HOJA SE LLAME Sheet1
                 valueInputOption: 'USER_ENTERED',
                 requestBody: {
-                    values: [[new Date().toLocaleString(), data.nombre, data.celular, data.ciudad, data.transporte, data.total, data.productosTexto]]
+                    values: [[
+                        new Date().toLocaleString('es-BO'), 
+                        data.nombre, 
+                        data.celular, 
+                        data.ciudad, 
+                        data.transporte || 'S/N', 
+                        data.total, 
+                        data.productosTexto || 'Sin detalle'
+                    ]]
                 }
             });
-        } catch (err) { console.error("Error Sheets:", err.message); }
+            console.log("✅ Datos enviados a Google Sheets");
+        } catch (sheetError) {
+            console.error("❌ Error en Google Sheets:", sheetError.message);
+            // El proceso sigue para no dejar al cliente sin su PDF
+        }
 
-        // 3. Generar PDF
+        // 3. Generar y enviar PDF
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=Recibo_${data.nro}.pdf`);
         const doc = new PDFDocument({ size: 'A5', margin: 40 });
         doc.pipe(res);
         dibujarPDF(doc, data);
         doc.end();
+
     } catch (error) {
-        console.error("Error crítico:", error);
-        res.status(500).json({ error: "Fallo en el servidor" });
+        console.error("❌ Error general:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
     }
 });
 
-// --- INICIO ---
+// --- INICIO DEL SERVIDOR ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor en puerto ${PORT}`);
+    console.log(`🚀 Servidor Piko Kopi activo en puerto ${PORT}`);
 });
