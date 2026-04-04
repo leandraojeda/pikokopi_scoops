@@ -11,7 +11,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        :root { --piko-pink: #ff85a2; --piko-pastel: #fff5f7; }
+        :root { --piko-pink: #ff85a2; --piko-pastel: #fff5f7; --piko-dark: #2c2c2c; }
+        
+        /* Estilos generales */
         .cart-wrapper { position: relative; cursor: pointer; display: inline-block; }
         #cart-count-badge {
             position: absolute; top: -5px; right: -8px;
@@ -23,16 +25,171 @@
             transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         #cart-count-badge.visible { transform: scale(1); opacity: 1; }
-        .btn-remove { background: none; border: none; color: #ffbcbc; cursor: pointer; font-size: 1.1rem; transition: 0.2s; }
-        .btn-remove:hover { color: var(--piko-pink); }
-        .hidden { display: none; }
-        .input-piko { padding: 10px; border-radius: 12px; border: 1px solid #ffdae0; font-family: 'Poppins'; outline: none; }
-        .cant-input { width: 45px; padding: 8px; border-radius: 8px; border: 1px solid #ffdae0; text-align: center; font-weight: 600; color: var(--piko-pink); }
         
-        /* Botones de cantidad en carrito */
-        .btn-qty { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #ffdae0; background: white; color: var(--piko-pink); cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .btn-qty-plus { background: var(--piko-pink); color: white; border: none; }
-        .btn-qty:active { transform: scale(0.9); }
+        /* Inputs minimalistas */
+        .input-piko { padding: 12px; border-radius: 12px; border: 1px solid #ffdae0; font-family: 'Poppins'; outline: none; transition: 0.3s; font-size: 0.9rem; }
+        .input-piko:focus { border-color: var(--piko-pink); box-shadow: 0 0 8px rgba(255, 133, 162, 0.15); }
+        
+        /* SELECTOR DE CANTIDAD - MINIMALISTA */
+        .cantidad-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f5f5f5;
+            padding: 6px 10px;
+            border-radius: 8px;
+            width: fit-content;
+        }
+
+        .cantidad-btn {
+            background: none;
+            border: none;
+            color: var(--piko-pink);
+            font-size: 16px;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            border-radius: 4px;
+        }
+
+        .cantidad-btn:hover {
+            background: var(--piko-pink);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .cantidad-input {
+            width: 40px;
+            border: none;
+            background: white;
+            text-align: center;
+            font-weight: 700;
+            color: var(--piko-dark);
+            font-size: 14px;
+            border-radius: 4px;
+            padding: 4px;
+            font-family: 'Poppins';
+        }
+
+        .cantidad-input::-webkit-outer-spin-button,
+        .cantidad-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Botón WhatsApp Aesthetic */
+        .swal-piko-button {
+            text-decoration: none; 
+            background: #25D366; 
+            color: white !important; 
+            padding: 16px; 
+            border-radius: 15px; 
+            font-weight: 700; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 12px;
+            font-family: 'Poppins', sans-serif;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);
+            width: 100%;
+            border: none;
+            cursor: pointer;
+        }
+        .swal-piko-button:hover { background: #128C7E; transform: translateY(-2px); }
+
+        /* Botón descargar recibo */
+        .swal-piko-button-descargar {
+            text-decoration: none; 
+            background: var(--piko-pink); 
+            color: white !important; 
+            padding: 16px; 
+            border-radius: 15px; 
+            font-weight: 700; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 12px;
+            font-family: 'Poppins', sans-serif;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 133, 162, 0.2);
+            width: 100%;
+            border: none;
+            cursor: pointer;
+        }
+        .swal-piko-button-descargar:hover { background: #ff6b8a; transform: translateY(-2px); }
+
+        /* ESTILOS PARA CATEGORÍAS */
+        .categoria-titulo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--piko-dark);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-left: 20px;
+            border-left: 4px solid var(--piko-pink);
+        }
+
+        .hidden { display: none; }
+        /* --- ESTO ES LO QUE ARREGLA LAS 4 COLUMNAS --- */
+
+/* Contenedor principal para que no se pegue a los bordes en PC */
+.productos-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Configuración de la fila de productos */
+.productos-row, 
+#vista-scoops, 
+#vista-productos-cat, 
+#vista-packs {
+    display: grid !important; /* Forzamos el uso de Grid */
+    grid-template-columns: repeat(4, 1fr); /* 4 columnas exactas */
+    gap: 20px; /* Espacio entre cards */
+    margin-bottom: 40px;
+}
+
+/* Estilo básico para la Card (para que no se desparrame) */
+.card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.card-info {
+    padding: 15px;
+}
+
+/* --- RESPONSIVE: Para que en celular no se vea minúsculo --- */
+@media (max-width: 1024px) {
+    .productos-row, #vista-scoops, #vista-productos-cat, #vista-packs {
+        grid-template-columns: repeat(3, 1fr); /* 3 columnas en tablets */
+    }
+}
+
+@media (max-width: 768px) {
+    .productos-row, #vista-scoops, #vista-productos-cat, #vista-packs {
+        grid-template-columns: repeat(2, 1fr); /* 2 columnas en celulares */
+        gap: 10px;
+    }
+}
     </style>
 </head>
 <body>
@@ -43,13 +200,12 @@
     <div class="nav-left">
         <a href="/" class="logo">PIKO <span>KOPI</span></a>
     </div>
-    
     <div class="nav-center">
         <button class="filter-btn active" onclick="filtrar('todos', this)">TODOS</button>
         <button class="filter-btn" onclick="filtrar('scoops', this)">SCOOPS</button>
-        <button class="filter-btn" onclick="filtrar('productos', this)">STATIONERY</button>
+        <button class="filter-btn" onclick="filtrar('productos', this)">PRODUCTOS</button>
+        <button class="filter-btn" onclick="filtrar('packs', this)">PACKS</button>
     </div>
-
     <div class="nav-right" style="display: flex; align-items: center; gap: 15px;">
         <div style="font-weight: 800; color: var(--piko-pink);"><span id="nav-total-bs">0</span> BS</div>
         <div class="cart-wrapper" onclick="abrirCarrito()">
@@ -59,88 +215,266 @@
     </div>
 </nav>
 
-<main class="productos-container">
+<main class="productos-container" id="main-container">
     <% if (typeof productos !== 'undefined' && productos.length > 0) { %>
-        <% productos.forEach(producto => { %>
-            <div class="card item-producto" data-categoria="<%= producto.cat %>">
-                <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
-                <div class="card-info">
-                    <h3><%= producto.titulo %></h3>
-                    <div class="price" id="precio-<%= producto.id %>">
-                        <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
-                    </div>
-                    
-                    <% if (producto.variantes && producto.variantes.length > 0) { %>
-                        <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
-                            <% producto.variantes.forEach(v => { %>
-                                <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
-                            <% }) %>
-                        </select>
-                    <% } %>
-                    
-                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-                        <input type="number" id="cant-<%= producto.id %>" class="cant-input" value="1" min="1" max="99">
-                        <button class="btn-add" style="flex: 1; margin-top: 0;" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR 🛒</button>
+        <% 
+            // Agrupar productos por categoría
+            const scoops = productos.filter(p => p.cat === 'scoops');
+            const packs = productos.filter(p => p.cat === 'packs');
+            const prods = productos.filter(p => p.cat === 'productos');
+        %>
+        
+        <!-- VISTA: TODOS (orden: scoops, packs, productos) -->
+        <div id="vista-todos" class="vista-productos">
+            <% if (scoops.length > 0) { %>
+                <div class="categoria-titulo">🍦 Scoops</div>
+                <div class="productos-row">
+                    <% scoops.forEach(producto => { %>
+                        <div class="card item-producto" data-categoria="<%= producto.cat %>">
+                            <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
+                            <div class="card-info">
+                                <h3><%= producto.titulo %></h3>
+                                <div class="price" id="precio-<%= producto.id %>">
+                                    <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
+                                </div>
+                                <% if (producto.variantes && producto.variantes.length > 0) { %>
+                                    <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
+                                        <% producto.variantes.forEach(v => { %>
+                                            <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
+                                        <% }) %>
+                                    </select>
+                                <% } %>
+                                
+                                <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px;">
+                                    <div class="cantidad-selector">
+                                        <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
+                                        <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                        <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
+                                    </div>
+                                    <button class="btn-add" style="flex: 1; margin-top: 0; margin-bottom: 0;" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR 🛒</button>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } %>
+
+            <% if (packs.length > 0) { %>
+                <div class="categoria-titulo">📦 Packs</div>
+                <div class="productos-row">
+                    <% packs.forEach(producto => { %>
+                        <div class="card item-producto" data-categoria="<%= producto.cat %>">
+                            <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
+                            <div class="card-info">
+                                <h3><%= producto.titulo %></h3>
+                                <div class="price" id="precio-<%= producto.id %>">
+                                    <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
+                                </div>
+                                <% if (producto.variantes && producto.variantes.length > 0) { %>
+                                    <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
+                                        <% producto.variantes.forEach(v => { %>
+                                            <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
+                                        <% }) %>
+                                    </select>
+                                <% } %>
+                                
+                                <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px;">
+                                    <div class="cantidad-selector">
+                                        <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
+                                        <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                        <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
+                                    </div>
+                                    <button class="btn-add" style="flex: 1; margin-top: 0; margin-bottom: 0;" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR 🛒</button>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } %>
+
+            <% if (prods.length > 0) { %>
+                <div class="categoria-titulo">✨ Productos</div>
+                <div class="productos-row">
+                    <% prods.forEach(producto => { %>
+                        <div class="card item-producto" data-categoria="<%= producto.cat %>">
+                            <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
+                            <div class="card-info">
+                                <h3><%= producto.titulo %></h3>
+                                <div class="price" id="precio-<%= producto.id %>">
+                                    <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
+                                </div>
+                                <% if (producto.variantes && producto.variantes.length > 0) { %>
+                                    <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
+                                        <% producto.variantes.forEach(v => { %>
+                                            <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
+                                        <% }) %>
+                                    </select>
+                                <% } %>
+                                
+                                <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px;">
+                                    <div class="cantidad-selector">
+                                        <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
+                                        <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                        <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
+                                    </div>
+                                    <button class="btn-add" style="flex: 1; margin-top: 0; margin-bottom: 0;" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR 🛒</button>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- VISTA: SCOOPS -->
+        <div id="vista-scoops" class="vista-productos" style="display: none;">
+            <% scoops.forEach(producto => { %>
+                <div class="card item-producto" data-categoria="<%= producto.cat %>">
+                    <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
+                    <div class="card-info">
+                        <h3><%= producto.titulo %></h3>
+                        <div class="price" id="precio-<%= producto.id %>">
+                            <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
+                        </div>
+                        <% if (producto.variantes && producto.variantes.length > 0) { %>
+                            <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
+                                <% producto.variantes.forEach(v => { %>
+                                    <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
+                                <% }) %>
+                            </select>
+                        <% } %>
+                        
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px;">
+                            <div class="cantidad-selector">
+                                <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
+                                <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
+                            </div>
+                            <button class="btn-add" style="flex: 1; margin-top: 0; margin-bottom: 0;" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR 🛒</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        <% }) %>
+            <% }) %>
+        </div>
+
+        <!-- VISTA: PRODUCTOS -->
+        <div id="vista-productos-cat" class="vista-productos" style="display: none;">
+            <% prods.forEach(producto => { %>
+                <div class="card item-producto" data-categoria="<%= producto.cat %>">
+                    <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
+                    <div class="card-info">
+                        <h3><%= producto.titulo %></h3>
+                        <div class="price" id="precio-<%= producto.id %>">
+                            <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
+                        </div>
+                        <% if (producto.variantes && producto.variantes.length > 0) { %>
+                            <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
+                                <% producto.variantes.forEach(v => { %>
+                                    <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
+                                <% }) %>
+                            </select>
+                        <% } %>
+                        
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px;">
+                            <div class="cantidad-selector">
+                                <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
+                                <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
+                            </div>
+                            <button class="btn-add" style="flex: 1; margin-top: 0; margin-bottom: 0;" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR 🛒</button>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+
+        <!-- VISTA: PACKS -->
+        <div id="vista-packs" class="vista-productos" style="display: none;">
+            <% packs.forEach(producto => { %>
+                <div class="card item-producto" data-categoria="<%= producto.cat %>">
+                    <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
+                    <div class="card-info">
+                        <h3><%= producto.titulo %></h3>
+                        <div class="price" id="precio-<%= producto.id %>">
+                            <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
+                        </div>
+                        <% if (producto.variantes && producto.variantes.length > 0) { %>
+                            <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
+                                <% producto.variantes.forEach(v => { %>
+                                    <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
+                                <% }) %>
+                            </select>
+                        <% } %>
+                        
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px;">
+                            <div class="cantidad-selector">
+                                <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
+                                <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
+                            </div>
+                            <button class="btn-add" style="flex: 1; margin-top: 0; margin-bottom: 0;" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR 🛒</button>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
     <% } %>
 </main>
 
 <div class="modal-overlay" id="modal-carrito" style="display: none;">
-    <div class="modal-content" style="max-width: 500px; border-radius: 20px;">
+    <div class="modal-content" style="max-width: 500px; border-radius: 25px; padding: 30px;">
         <span class="close-modal" onclick="cerrarCarrito()">&times;</span>
         
         <div id="paso-1">
-            <h2 style="color: var(--piko-pink); text-align: center; font-weight: 800;">Tu Carrito ✨</h2>
-            <div id="lista-carrito" style="max-height: 350px; overflow-y: auto; margin: 15px 0; padding-right: 5px;"></div>
-            <div style="border-top: 2px solid var(--piko-pastel); padding-top: 15px;">
-                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.2rem;">
-                    <span>TOTAL:</span>
+            <h2 style="color: var(--piko-pink); text-align: center; font-weight: 800; letter-spacing: -1px;">Tu Carrito ✨</h2>
+            <div id="lista-carrito" style="max-height: 300px; overflow-y: auto; margin: 20px 0;"></div>
+            <div style="border-top: 1px solid #eee; padding-top: 20px;">
+                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.3rem; color: var(--piko-dark);">
+                    <span>TOTAL</span>
                     <span><span id="total-modal">0</span> BS</span>
                 </div>
-                <button class="btn-add" style="width:100%; margin-top: 15px;" onclick="irAPaso2()">CONTINUAR AL ENVÍO 🚚</button>
+                <button class="btn-add" style="width:100%; margin-top: 20px; padding: 18px;" onclick="irAPaso2()">CONTINUAR AL ENVÍO 🚚</button>
             </div>
         </div>
 
         <div id="paso-2" style="display: none;">
-            <button onclick="irAPaso1()" style="background:none; border:none; cursor:pointer; color: gray; margin-bottom: 10px;"><i class="fa-solid fa-arrow-left"></i> Volver</button>
-            <h2 style="text-align: center; margin-bottom: 15px; color: var(--piko-pink);">🛍️ Datos de Envío</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <button onclick="irAPaso1()" style="background:none; border:none; cursor:pointer; color: #bbb; font-weight: 600; font-size: 0.9rem; padding: 0;"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+                <h2 style="text-align: center; margin: 0; color: var(--piko-pink); font-weight: 800; flex: 1;">Datos de Envío</h2>
+                <div style="width: 40px;"></div>
+            </div>
             
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <input type="text" id="f-nombre" class="input-piko" placeholder="Tu Nombre Completo" required>
-                <input type="tel" id="f-celular" class="input-piko" placeholder="WhatsApp (7XXXXXXX)" required>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <input type="text" id="f-nombre" class="input-piko" placeholder="Nombre completo">
+                <input type="tel" id="f-celular" class="input-piko" placeholder="WhatsApp">
                 
-                <label style="font-size: 0.8rem; font-weight: 600;">Ciudad de Destino:</label>
                 <select id="f-ciudad" class="input-piko" onchange="gestionarLogicaEnvio()">
                     <option value="Sucre">Sucre</option>
                     <option value="La Paz">La Paz</option>
                     <option value="Santa Cruz">Santa Cruz</option>
                     <option value="Cochabamba">Cochabamba</option>
-                    <option value="Oruro">Oruro</option>
-                    <option value="Potosi">Potosí</option>
-                    <option value="Tarija">Tarija</option>
                 </select>
 
                 <div id="opciones-sucre">
                     <select id="envio-sucre" class="input-piko">
-                        <option value="Recojo Plaza 25 de Mayo (Gratis)">Recojo Plaza 25 de Mayo (Gratis)</option>
-                        <option value="Delivery Sucre (10 BS)">Delivery a domicilio (10 BS)</option>
+                        <option value="Recojo Plaza (Gratis)">Recojo Plaza 25 de Mayo (Gratis)</option>
+                        <option value="Delivery (10 BS)">Delivery a domicilio (10 BS)</option>
                     </select>
                 </div>
 
                 <div id="opciones-nacional" class="hidden">
-                    <select id="envio-nacional" class="input-piko" onchange="verificarOtroTransporte()"></select>
-                    <input type="text" id="otro-transporte" class="input-piko hidden" placeholder="¿Qué transportadora prefieres?" style="margin-top:5px;">
+                    <select id="envio-nacional" class="input-piko"></select>
                 </div>
 
-                <div style="margin-top: 10px; border-top: 2px solid var(--piko-pastel); padding-top: 10px;">
-                    <h3 style="color: var(--piko-pink); text-align: right;">Total Final: <span id="total-final">0</span> BS</h3>
-                    <button type="button" id="btn-piko-final" class="btn-add" style="width: 100%; padding: 15px;" onclick="enviarAlExcel()">
-                        CONFIRMAR PEDIDO 🌸
-                    </button>
+                <div style="margin-top: 15px; background: var(--piko-pastel); padding: 20px; border-radius: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; color: #888;">Total a pagar:</span>
+                        <span style="font-weight: 800; color: var(--piko-pink); font-size: 1.4rem;"><span id="total-final">0</span> BS</span>
+                    </div>
                 </div>
+                <button type="button" id="btn-piko-final" class="btn-add" style="width: 100%; padding: 18px;" onclick="enviarAlExcel()">
+                    CONFIRMAR PEDIDO 🌸
+                </button>
             </div>
         </div>
     </div>
@@ -151,163 +485,181 @@
 <script>
     let carrito = [];
     let total = 0;
+    let numeroRecibo = '';
 
-    const transportadoras = {
-        "La Paz": ["Trans Copacabana", "El Dorado", "Bolivar", "Otro (Escribir)"],
-        "Santa Cruz": ["Flota Bolivar", "Trans Copacabana S.A.", "Otro (Escribir)"],
-        "General": ["Trans Copacabana", "El Dorado", "Otro (Escribir)"]
-    };
+    function sumarCantidad(id) {
+        const input = document.getElementById(`cant-${id}`);
+        input.value = parseInt(input.value) + 1;
+    }
+
+    function restarCantidad(id) {
+        const input = document.getElementById(`cant-${id}`);
+        if (parseInt(input.value) > 1) {
+            input.value = parseInt(input.value) - 1;
+        }
+    }
 
     function agregarAlCarrito(id, titulo, img) {
-        const precioUnitario = parseFloat(document.getElementById(`precio-${id}`).innerText);
+        const precio = parseFloat(document.getElementById(`precio-${id}`).innerText);
         const cantidad = parseInt(document.getElementById(`cant-${id}`).value) || 1;
         const sel = document.getElementById(`select-${id}`);
         const variante = sel ? sel.options[sel.selectedIndex].getAttribute('data-nombre') : "";
         
-        const subtotal = precioUnitario * cantidad;
-
-        carrito.push({ 
-            idU: Date.now(), 
-            titulo, 
-            img, 
-            variante, 
-            precio: precioUnitario, 
-            cantidad, 
-            subtotal 
-        });
-
-        total += subtotal;
-        document.getElementById(`cant-${id}`).value = 1;
-        actualizarUI();
-
-        const btn = event.target;
-        btn.innerText = "¡AÑADIDO! ✨";
-        setTimeout(() => btn.innerText = "AÑADIR 🛒", 800);
-    }
-
-    function cambiarCantidad(idU, cambio) {
-        const i = carrito.findIndex(p => p.idU === idU);
-        if (i > -1) {
-            const nuevaCant = carrito[i].cantidad + cambio;
-            if (nuevaCant <= 0) return eliminarDelCarrito(idU);
-            
-            total -= carrito[i].subtotal;
-            carrito[i].cantidad = nuevaCant;
-            carrito[i].subtotal = carrito[i].precio * nuevaCant;
-            total += carrito[i].subtotal;
-            actualizarUI();
-        }
-    }
-
-    function eliminarDelCarrito(idU) {
-        const i = carrito.findIndex(p => p.idU === idU);
-        if(i > -1) { total -= carrito[i].subtotal; carrito.splice(i, 1); }
+        carrito.push({ idU: Date.now(), titulo, img, variante, precio, cantidad, subtotal: precio * cantidad });
+        total += (precio * cantidad);
         actualizarUI();
     }
 
     function actualizarUI() {
         document.getElementById('nav-total-bs').innerText = total.toFixed(2);
         document.getElementById('total-modal').innerText = total.toFixed(2);
-        
-        const b = document.getElementById('cart-count-badge');
         const unidades = carrito.reduce((sum, p) => sum + p.cantidad, 0);
-        b.innerText = unidades;
-        b.classList.toggle('visible', unidades > 0);
+        const badge = document.getElementById('cart-count-badge');
+        badge.innerText = unidades;
+        badge.classList.toggle('visible', unidades > 0);
         
-        const l = document.getElementById('lista-carrito');
-        l.innerHTML = carrito.length === 0 ? '<p style="text-align:center; padding:20px;">Tu carrito está vacío 🌸</p>' : 
-            carrito.map(p => `
-                <div style="display:flex; align-items:center; padding:12px 0; border-bottom:1px solid #fdf0f2; gap: 12px;">
-                    <img src="${p.img}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 12px; border: 1px solid #ffdae0;">
-                    <div style="flex: 1;">
-                        <div style="font-weight:600; font-size:0.85rem; color: #444;">${p.titulo}</div>
-                        <small style="color:gray;">${p.variante ? p.variante : 'Único'}</small>
-                        <div style="color:var(--piko-pink); font-weight:800;">${p.subtotal.toFixed(2)} BS</div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <button class="btn-qty" onclick="cambiarCantidad(${p.idU}, -1)">-</button>
-                        <span style="font-weight:700; min-width:15px; text-align:center;">${p.cantidad}</span>
-                        <button class="btn-qty btn-qty-plus" onclick="cambiarCantidad(${p.idU}, 1)">+</button>
-                    </div>
-                    <button class="btn-remove" onclick="eliminarDelCarrito(${p.idU})"><i class="fa-solid fa-trash-can"></i></button>
-                </div>`).join('');
+        const lista = document.getElementById('lista-carrito');
+        lista.innerHTML = carrito.map(p => `
+            <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px; border-bottom:1px solid #f9f9f9; padding-bottom:10px;">
+                <img src="${p.img}" style="width:50px; border-radius:10px;">
+                <div style="flex:1">
+                    <div style="font-weight:600; font-size:0.9rem;">${p.titulo}</div>
+                    <small style="color:#aaa">${p.variante}</small>
+                </div>
+                <div style="font-weight:800; color:var(--piko-pink)">${p.subtotal.toFixed(2)}</div>
+            </div>
+        `).join('');
     }
 
-    function gestionarLogicaEnvio() {
-        const ciudad = document.getElementById('f-ciudad').value;
-        const divSucre = document.getElementById('opciones-sucre');
-        const divNacional = document.getElementById('opciones-nacional');
-        if (ciudad === "Sucre") {
-            divSucre.classList.remove('hidden');
-            divNacional.classList.add('hidden');
-        } else {
-            divSucre.classList.add('hidden');
-            divNacional.classList.remove('hidden');
-            const opciones = transportadoras[ciudad] || transportadoras["General"];
-            document.getElementById('envio-nacional').innerHTML = opciones.map(o => `<option value="${o}">${o}</option>`).join('');
-            verificarOtroTransporte();
-        }
-    }
-
-    function verificarOtroTransporte() {
-        const val = document.getElementById('envio-nacional').value;
-        document.getElementById('otro-transporte').classList.toggle('hidden', val !== "Otro (Escribir)");
+    function descargarReciboNuevamente(nro, nombre) {
+        fetch(`/descargar-recibo/${nro}`)
+            .then(res => res.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Recibo_#${nro}_${nombre}.pdf`;
+                a.click();
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Recibo descargado',
+                    text: 'Tu recibo se ha descargado correctamente',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            })
+            .catch(() => Swal.fire('Error', 'No pudimos descargar el recibo', 'error'));
     }
 
     async function enviarAlExcel() {
         const btn = document.getElementById('btn-piko-final');
-        const nombre = document.getElementById('f-nombre').value.trim();
-        const celular = document.getElementById('f-celular').value.trim();
-        if(!nombre || !celular) return Swal.fire("¡Espera!", "Dime tu nombre y cel para coordinar 🌸", "warning");
-
+        const nombre = document.getElementById('f-nombre').value;
+        const celular = document.getElementById('f-celular').value;
         const ciudad = document.getElementById('f-ciudad').value;
-        let transporte = (ciudad === "Sucre") ? document.getElementById('envio-sucre').value : 
-                        (document.getElementById('envio-nacional').value === "Otro (Escribir)" ? document.getElementById('otro-transporte').value : document.getElementById('envio-nacional').value);
 
-        const data = {
-            nombre, celular, ciudad, transporte,
-            total: total.toFixed(2) + " BS",
-            carrito: carrito,
-            productosTexto: carrito.map(p => `${p.cantidad}x ${p.titulo}${p.variante ? ' ('+p.variante+')' : ''}`).join(', ')
-        };
+        if(!nombre || !celular) return Swal.fire("¡Ups!", "Completa tus datos 🌸", "warning");
+
+        // Número de pedido estético
+        let nro = (parseInt(localStorage.getItem('piko_nro') || "0") + 1).toString().padStart(4, '0');
+        numeroRecibo = nro;
+        localStorage.setItem('piko_nro', nro);
+
+        btn.disabled = true;
+        btn.innerText = "PROCESANDO... ✨";
 
         try {
-            btn.disabled = true; btn.innerText = "🌸 GUARDANDO...";
             const res = await fetch('/confirmar-pedido', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
+                body: JSON.stringify({ 
+                    nombre, 
+                    celular, 
+                    ciudad,
+                    total: total.toFixed(2), 
+                    carrito,
+                    nro: nro
+                })
             });
 
             if (res.ok) {
                 const blob = await res.blob();
                 const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Pedido_PikoKopi_${nombre.replace(/\s+/g, '_')}.pdf`;
-                document.body.appendChild(a); a.click();
                 
-                await Swal.fire({ title: '¡Pedido Listo! ✨', text: 'Tu recibo se descargó. ¡Escríbeme al WhatsApp para confirmar el pago!', icon: 'success', confirmButtonColor: '#ff85a2' });
-                window.location.reload();
+                // DESCARGA AUTOMÁTICA
+                const a = document.createElement('a');
+                a.href = url; 
+                a.download = `Recibo_#${nro}_${nombre}.pdf`;
+                a.click();
+
+                cerrarCarrito();
+
+                const msg = encodeURIComponent(`¡Hola Piko Kopi! 🌸 Mi pedido es el #${nro}. Soy ${nombre} y ya tengo mi recibo.`);
+                
+                await Swal.fire({
+                    title: '<span style="color:var(--piko-pink)">¡PEDIDO LISTO! ✨</span>',
+                    html: `
+                        <div style="font-family:Poppins; padding:10px;">
+                            <p style="font-size:3rem; margin:0;">📄</p>
+                            <h2 style="margin:10px 0; color: var(--piko-pink);">#${nro}</h2>
+                            <p style="color:#777; font-size:0.9rem;">Tu recibo se ha descargado automáticamente.</p>
+                            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                                <a href="https://wa.me/591XXXXXXXXX?text=${msg}" target="_blank" class="swal-piko-button">
+                                    <i class="fa-brands fa-whatsapp"></i> ENVIAR A WHATSAPP
+                                </a>
+                                <button class="swal-piko-button-descargar" onclick="descargarReciboNuevamente('${nro}', '${nombre}')">
+                                    <i class="fa-solid fa-download"></i> DESCARGAR RECIBO
+                                </button>
+                            </div>
+                        </div>
+                    `,
+                    showConfirmButton: false,
+                    footer: '<a href="javascript:location.reload()" style="color:#aaa; font-size:0.8rem; text-decoration:none;">Hacer otro pedido</a>'
+                });
             }
-        } catch (e) { Swal.fire("Error", "No se pudo conectar con el servidor", "error"); }
-        finally { btn.disabled = false; btn.innerText = "CONFIRMAR PEDIDO 🌸"; }
+        } catch (e) {
+            Swal.fire("Error", "No pudimos generar el recibo 🌸", "error");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "CONFIRMAR PEDIDO 🌸";
+        }
     }
 
     function irAPaso2() { 
-        if(carrito.length === 0) return Swal.fire("¡Carrito vacío!", "Añade algo tierno primero 🌸", "info");
-        document.getElementById('paso-1').style.display = 'none';
-        document.getElementById('paso-2').style.display = 'block';
-        document.getElementById('total-final').innerText = total.toFixed(2);
-        gestionarLogicaEnvio();
+        document.getElementById('paso-1').style.display = 'none'; 
+        document.getElementById('paso-2').style.display = 'block'; 
+        document.getElementById('total-final').innerText = total.toFixed(2); 
     }
-    function irAPaso1() { document.getElementById('paso-2').style.display = 'none'; document.getElementById('paso-1').style.display = 'block'; }
-    function abrirCarrito() { irAPaso1(); document.getElementById('modal-carrito').style.display = 'flex'; }
-    function cerrarCarrito() { document.getElementById('modal-carrito').style.display = 'none'; }
+    function irAPaso1() { 
+        document.getElementById('paso-2').style.display = 'none'; 
+        document.getElementById('paso-1').style.display = 'block'; 
+    }
+    function abrirCarrito() { 
+        document.getElementById('modal-carrito').style.display = 'flex'; 
+    }
+    function cerrarCarrito() { 
+        document.getElementById('modal-carrito').style.display = 'none'; 
+    }
     function filtrar(cat, btn) {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        document.querySelectorAll('.item-producto').forEach(i => i.style.display = (cat === 'todos' || i.dataset.categoria === cat) ? 'flex' : 'none');
+        
+        // Ocultar todas las vistas
+        document.getElementById('vista-todos').style.display = 'none';
+        document.getElementById('vista-scoops').style.display = 'none';
+        document.getElementById('vista-productos-cat').style.display = 'none';
+        document.getElementById('vista-packs').style.display = 'none';
+        
+        // Mostrar la vista seleccionada
+        if (cat === 'todos') {
+            document.getElementById('vista-todos').style.display = 'block';
+        } else if (cat === 'scoops') {
+            document.getElementById('vista-scoops').style.display = 'grid';
+        } else if (cat === 'productos') {
+            document.getElementById('vista-productos-cat').style.display = 'grid';
+        } else if (cat === 'packs') {
+            document.getElementById('vista-packs').style.display = 'grid';
+        }
     }
 </script>
 </body>
