@@ -10,6 +10,7 @@ pedidos.db-journal
 Thumbs.db
 
 # Variables de entorno (si llegas a usar un archivo .env para contraseñas)
+.env
 
 # Carpetas de logs o errores
 npm-debug.log*
