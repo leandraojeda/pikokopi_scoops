@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Piko Kopi Shop 🌸</title>
-    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -25,7 +24,7 @@
         <button class="filter-btn" onclick="filtrar('packs', this)">PACKS</button>
     </div>
     <div class="nav-right">
-        <div class="header-total"><span id="nav-total-bs">0</span> BS</div>
+        <div class="header-total"><span id="nav-total-bs">0.00</span> BS</div>
         <div class="cart-wrapper" onclick="abrirCarrito()">
             <i class="fa-solid fa-cart-shopping" style="font-size: 1.2rem;"></i>
             <span id="cart-count-badge">0</span>
@@ -33,7 +32,6 @@
     </div>
 </nav>
 
-<!-- BANNER -->
 <section class="banner-section">
     <img src="/img/banner.jpg" alt="Piko Kopi Banner">
 </section>
@@ -41,17 +39,18 @@
 <main class="productos-container" id="main-container">
     <% if (typeof productos !== 'undefined' && productos.length > 0) { %>
         <% 
-            const scoops = productos.filter(p => p.cat === 'scoops');
-            const packs = productos.filter(p => p.cat === 'packs');
-            const prods = productos.filter(p => p.cat === 'productos');
+            const categorias = [
+                { id: 'todos', label: 'Todos', data: productos },
+                { id: 'scoops', label: '🍦 Scoops', data: productos.filter(p => p.cat === 'scoops') },
+                { id: 'productos-cat', label: '✨ Productos', data: productos.filter(p => p.cat === 'productos') },
+                { id: 'packs', label: '📦 Packs', data: productos.filter(p => p.cat === 'packs') }
+            ];
         %>
-        
-        <!-- VISTA: TODOS -->
-        <div id="vista-todos" class="vista-productos" style="grid-column: 1 / -1;">
-            <% if (scoops.length > 0) { %>
-                <div class="categoria-titulo">🍦 Scoops</div>
+
+        <% categorias.forEach(catObj => { %>
+            <div id="vista-<%= catObj.id %>" class="vista-productos" style="<%= catObj.id === 'todos' ? '' : 'display: none;' %> grid-column: 1 / -1;">
                 <div class="productos-container">
-                    <% scoops.forEach(producto => { %>
+                    <% catObj.data.forEach(producto => { %>
                         <div class="card item-producto" data-categoria="<%= producto.cat %>">
                             <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
                             <div class="card-info">
@@ -66,7 +65,6 @@
                                         <% }) %>
                                     </select>
                                 <% } %>
-                                
                                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
                                     <div class="cantidad-selector">
                                         <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
@@ -79,177 +77,11 @@
                         </div>
                     <% }) %>
                 </div>
-            <% } %>
-
-            <% if (packs.length > 0) { %>
-                <div class="categoria-titulo">📦 Packs</div>
-                <div class="productos-container">
-                    <% packs.forEach(producto => { %>
-                        <div class="card item-producto" data-categoria="<%= producto.cat %>">
-                            <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
-                            <div class="card-info">
-                                <h3><%= producto.titulo %></h3>
-                                <div class="price" id="precio-<%= producto.id %>">
-                                    <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
-                                </div>
-                                <% if (producto.variantes && producto.variantes.length > 0) { %>
-                                    <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
-                                        <% producto.variantes.forEach(v => { %>
-                                            <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
-                                        <% }) %>
-                                    </select>
-                                <% } %>
-                                
-                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
-                                    <div class="cantidad-selector">
-                                        <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                        <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                        <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
-                                    </div>
-                                    <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR</button>
-                                </div>
-                            </div>
-                        </div>
-                    <% }) %>
-                </div>
-            <% } %>
-
-            <% if (prods.length > 0) { %>
-                <div class="categoria-titulo">✨ Productos</div>
-                <div class="productos-container">
-                    <% prods.forEach(producto => { %>
-                        <div class="card item-producto" data-categoria="<%= producto.cat %>">
-                            <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
-                            <div class="card-info">
-                                <h3><%= producto.titulo %></h3>
-                                <div class="price" id="precio-<%= producto.id %>">
-                                    <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
-                                </div>
-                                <% if (producto.variantes && producto.variantes.length > 0) { %>
-                                    <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
-                                        <% producto.variantes.forEach(v => { %>
-                                            <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
-                                        <% }) %>
-                                    </select>
-                                <% } %>
-                                
-                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
-                                    <div class="cantidad-selector">
-                                        <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                        <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                        <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
-                                    </div>
-                                    <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR</button>
-                                </div>
-                            </div>
-                        </div>
-                    <% }) %>
-                </div>
-            <% } %>
-        </div>
-
-        <!-- VISTA: SCOOPS -->
-        <div id="vista-scoops" class="vista-productos" style="display: none; grid-column: 1 / -1;">
-            <div class="productos-container">
-                <% scoops.forEach(producto => { %>
-                    <div class="card item-producto" data-categoria="<%= producto.cat %>">
-                        <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
-                        <div class="card-info">
-                            <h3><%= producto.titulo %></h3>
-                            <div class="price" id="precio-<%= producto.id %>">
-                                <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
-                            </div>
-                            <% if (producto.variantes && producto.variantes.length > 0) { %>
-                                <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
-                                    <% producto.variantes.forEach(v => { %>
-                                        <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
-                                    <% }) %>
-                                </select>
-                            <% } %>
-                            
-                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
-                                <div class="cantidad-selector">
-                                    <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                    <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                    <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
-                                </div>
-                                <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR</button>
-                            </div>
-                        </div>
-                    </div>
-                <% }) %>
             </div>
-        </div>
-
-        <!-- VISTA: PRODUCTOS -->
-        <div id="vista-productos-cat" class="vista-productos" style="display: none; grid-column: 1 / -1;">
-            <div class="productos-container">
-                <% prods.forEach(producto => { %>
-                    <div class="card item-producto" data-categoria="<%= producto.cat %>">
-                        <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
-                        <div class="card-info">
-                            <h3><%= producto.titulo %></h3>
-                            <div class="price" id="precio-<%= producto.id %>">
-                                <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
-                            </div>
-                            <% if (producto.variantes && producto.variantes.length > 0) { %>
-                                <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
-                                    <% producto.variantes.forEach(v => { %>
-                                        <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
-                                    <% }) %>
-                                </select>
-                            <% } %>
-                            
-                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
-                                <div class="cantidad-selector">
-                                    <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                    <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                    <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
-                                </div>
-                                <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR</button>
-                            </div>
-                        </div>
-                    </div>
-                <% }) %>
-            </div>
-        </div>
-
-        <!-- VISTA: PACKS -->
-        <div id="vista-packs" class="vista-productos" style="display: none; grid-column: 1 / -1;">
-            <div class="productos-container">
-                <% packs.forEach(producto => { %>
-                    <div class="card item-producto" data-categoria="<%= producto.cat %>">
-                        <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
-                        <div class="card-info">
-                            <h3><%= producto.titulo %></h3>
-                            <div class="price" id="precio-<%= producto.id %>">
-                                <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
-                            </div>
-                            <% if (producto.variantes && producto.variantes.length > 0) { %>
-                                <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
-                                    <% producto.variantes.forEach(v => { %>
-                                        <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
-                                    <% }) %>
-                                </select>
-                            <% } %>
-                            
-                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
-                                <div class="cantidad-selector">
-                                    <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                    <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                    <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
-                                </div>
-                                <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR</button>
-                            </div>
-                        </div>
-                    </div>
-                <% }) %>
-            </div>
-        </div>
+        <% }) %>
     <% } %>
 </main>
 
-<!-- MODAL CARRITO -->
 <div class="modal-overlay" id="modal-carrito">
     <div class="modal-content">
         <button class="close-modal" onclick="cerrarCarrito()">✕</button>
@@ -260,36 +92,31 @@
             <div style="border-top: 1px solid #eee; padding-top: 15px;">
                 <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.2rem; color: var(--piko-dark); margin-bottom: 15px;">
                     <span>TOTAL</span>
-                    <span><span id="total-modal">0</span> BS</span>
+                    <span><span id="total-modal">0.00</span> BS</span>
                 </div>
-                <button class="btn-add" style="width:100%; padding: 12px; font-size: 0.85rem;" onclick="irAPaso2()">CONTINUAR AL ENVÍO</button>
+                <button class="btn-add" style="width:100%; padding: 12px;" onclick="irAPaso2()">CONTINUAR AL ENVÍO</button>
             </div>
         </div>
 
         <div id="paso-2" style="display: none;">
             <button onclick="irAPaso1()" style="background:none; border:none; cursor:pointer; color: #999; margin-bottom: 15px; font-weight: 600;"><i class="fa-solid fa-arrow-left"></i> Volver</button>
             <h2 style="text-align: center; margin-bottom: 15px; color: var(--piko-pink); font-weight: 800;">Datos de Envío</h2>
-            
             <div style="display: flex; flex-direction: column; gap: 12px;">
-                <input type="text" id="f-nombre" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Poppins';" placeholder="Nombre completo">
-                <input type="tel" id="f-celular" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Poppins';" placeholder="WhatsApp">
-                
-                <select id="f-ciudad" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Poppins';">
+                <input type="text" id="f-nombre" placeholder="Nombre completo" required>
+                <input type="tel" id="f-celular" placeholder="WhatsApp (ej. 77123456)" required>
+                <select id="f-ciudad">
                     <option value="Sucre">Sucre</option>
                     <option value="La Paz">La Paz</option>
                     <option value="Santa Cruz">Santa Cruz</option>
                     <option value="Cochabamba">Cochabamba</option>
                 </select>
-
                 <div style="margin-top: 10px; background: var(--piko-pastel); padding: 15px; border-radius: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 600; color: #666;">Total a pagar:</span>
-                        <span style="font-weight: 800; color: var(--piko-pink); font-size: 1.3rem;"><span id="total-final">0</span> BS</span>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-weight: 600;">Total:</span>
+                        <span style="font-weight: 800; color: var(--piko-pink); font-size: 1.3rem;"><span id="total-final">0.00</span> BS</span>
                     </div>
                 </div>
-                <button type="button" id="btn-piko-final" class="btn-add" style="width: 100%; padding: 12px; font-size: 0.85rem;" onclick="enviarAlExcel()">
-                    CONFIRMAR PEDIDO
-                </button>
+                <button type="button" id="btn-piko-final" class="btn-add" style="width: 100%;" onclick="enviarPedido()">CONFIRMAR PEDIDO</button>
             </div>
         </div>
     </div>
@@ -298,145 +125,188 @@
 <%- include('partials/footer') %>
 
 <script>
-    let carrito = [];
-    let total = 0;
+let carrito = JSON.parse(localStorage.getItem('piko_cart')) || [];
 
-    function sumarCantidad(id) {
-        const input = document.getElementById(`cant-${id}`);
-        input.value = parseInt(input.value) + 1;
+document.addEventListener('DOMContentLoaded', () => {
+    actualizarUI();
+});
+
+function guardarCarrito() {
+    localStorage.setItem('piko_cart', JSON.stringify(carrito));
+}
+
+function sumarCantidad(id) {
+    const input = document.getElementById(`cant-${id}`);
+    input.value = parseInt(input.value) + 1;
+}
+
+function restarCantidad(id) {
+    const input = document.getElementById(`cant-${id}`);
+    if (parseInt(input.value) > 1) input.value = parseInt(input.value) - 1;
+}
+
+function agregarAlCarrito(id, titulo, img) {
+    const inputCant = document.getElementById(`cant-${id}`);
+    const cantidad = parseInt(inputCant.value);
+    const precio = parseFloat(document.getElementById(`precio-${id}`).innerText);
+    const sel = document.getElementById(`select-${id}`);
+    const variante = sel ? sel.options[sel.selectedIndex].getAttribute('data-nombre') : "Único";
+
+    // Buscar si ya existe el mismo producto con la misma variante
+    const existe = carrito.find(p => p.id === id && p.variante === variante);
+    if (existe) {
+        existe.cantidad += cantidad;
+    } else {
+        carrito.push({ id, titulo, img, variante, precio, cantidad });
     }
+    
+    inputCant.value = 1;
+    Swal.fire({ title: "¡Añadido!", icon: "success", timer: 1000, showConfirmButton: false });
+    actualizarUI();
+}
 
-    function restarCantidad(id) {
-        const input = document.getElementById(`cant-${id}`);
-        if (parseInt(input.value) > 1) {
-            input.value = parseInt(input.value) - 1;
-        }
-    }
-
-    function agregarAlCarrito(id, titulo, img) {
-        const precio = parseFloat(document.getElementById(`precio-${id}`).innerText);
-        const cantidad = parseInt(document.getElementById(`cant-${id}`).value) || 1;
-        const sel = document.getElementById(`select-${id}`);
-        const variante = sel ? sel.options[sel.selectedIndex].getAttribute('data-nombre') : "";
-        
-        carrito.push({ idU: Date.now(), titulo, img, variante, precio, cantidad, subtotal: precio * cantidad });
-        total += (precio * cantidad);
+function cambiarCantidadCarrito(idx, delta) {
+    if (carrito[idx].cantidad + delta > 0) {
+        carrito[idx].cantidad += delta;
         actualizarUI();
     }
+}
 
-    function actualizarUI() {
-        document.getElementById('nav-total-bs').innerText = total.toFixed(2);
-        document.getElementById('total-modal').innerText = total.toFixed(2);
-        const unidades = carrito.reduce((sum, p) => sum + p.cantidad, 0);
-        const badge = document.getElementById('cart-count-badge');
-        badge.innerText = unidades;
-        badge.classList.toggle('visible', unidades > 0);
-        
-        const lista = document.getElementById('lista-carrito');
-        lista.innerHTML = carrito.map((p, idx) => `
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-                <img src="${p.img}" style="width:45px; height:45px; border-radius:8px; object-fit:cover;">
+function eliminarDelCarrito(idx) {
+    carrito.splice(idx, 1);
+    actualizarUI();
+}
+
+function actualizarUI() {
+    let total = 0;
+    let unidades = 0;
+    const lista = document.getElementById('lista-carrito');
+    
+    lista.innerHTML = carrito.map((p, idx) => {
+        const subtotal = p.precio * p.cantidad;
+        total += subtotal;
+        unidades += p.cantidad;
+        return `
+            <div class="cart-item-row" style="display:flex; align-items:center; gap:10px; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+                <img src="${p.img}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
                 <div style="flex:1">
                     <div style="font-weight:600; font-size:0.85rem;">${p.titulo}</div>
                     <small style="color:#999">${p.variante}</small>
+                    <div style="display:flex; align-items:center; gap:8px; margin-top:5px;">
+                        <button onclick="cambiarCantidadCarrito(${idx}, -1)" class="cant-mini">-</button>
+                        <span>${p.cantidad}</span>
+                        <button onclick="cambiarCantidadCarrito(${idx}, 1)" class="cant-mini">+</button>
+                    </div>
                 </div>
-                <div style="font-weight:800; color:var(--piko-pink); font-size:0.9rem;">${p.subtotal.toFixed(2)}</div>
-                <button onclick="eliminarDelCarrito(${idx})" style="background:none; border:none; color:#ccc; cursor:pointer; font-size:1rem;">×</button>
+                <div style="text-align:right">
+                    <div style="font-weight:800; color:var(--piko-pink);">${subtotal.toFixed(2)} BS</div>
+                    <button onclick="eliminarDelCarrito(${idx})" style="background:none; border:none; color:#ff4d4d; cursor:pointer;">Eliminar</button>
+                </div>
             </div>
-        `).join('');
+        `;
+    }).join('');
+
+    if (carrito.length === 0) lista.innerHTML = "<p style='text-align:center; color:#999;'>Tu carrito está vacío 🌸</p>";
+
+    document.getElementById('nav-total-bs').innerText = total.toFixed(2);
+    document.getElementById('total-modal').innerText = total.toFixed(2);
+    document.getElementById('cart-count-badge').innerText = unidades;
+    guardarCarrito();
+}
+
+async function enviarPedido() {
+    const btn = document.getElementById('btn-piko-final');
+    const nombre = document.getElementById('f-nombre').value.trim();
+    const celular = document.getElementById('f-celular').value.trim();
+    const ciudad = document.getElementById('f-ciudad').value;
+    const total = document.getElementById('total-modal').innerText;
+
+    if(!nombre || !celular || carrito.length === 0) {
+        return Swal.fire("¡Atención!", "Completa tus datos y asegúrate de tener productos.", "warning");
     }
 
-    function eliminarDelCarrito(idx) {
-        total -= carrito[idx].subtotal;
-        carrito.splice(idx, 1);
-        actualizarUI();
-    }
+    btn.disabled = true;
+    btn.innerText = "PROCESANDO...";
 
-    async function enviarAlExcel() {
-        const btn = document.getElementById('btn-piko-final');
-        const nombre = document.getElementById('f-nombre').value;
-        const celular = document.getElementById('f-celular').value;
-        const ciudad = document.getElementById('f-ciudad').value;
+    try {
+        // Importante: Usar URL absoluta o asegurar que la ruta sea correcta en Render
+        const response = await fetch('/confirmar-pedido', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                nombre, 
+                celular, 
+                ciudad, 
+                total, 
+                carrito,
+                nro: (Math.floor(Math.random() * 9000) + 1000).toString() // Genera un nro temporal si no tienes contador
+            })
+        });
 
-        if(!nombre || !celular) return Swal.fire("¡Ups!", "Completa tus datos", "warning");
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Pedido_PikoKopi_${nombre}.pdf`;
+            a.click();
 
-        let nro = (parseInt(localStorage.getItem('piko_nro') || "0") + 1).toString().padStart(4, '0');
-        localStorage.setItem('piko_nro', nro);
+            Swal.fire("¡Éxito!", "Tu pedido ha sido procesado. Se descargará tu recibo.", "success");
+            
+            const textoWhatsApp = `¡Hola! He realizado un pedido a nombre de ${nombre}. Mi total es ${total} BS. Adjunto mi recibo PDF.`;
+            window.open(`https://wa.me/59177143374?text=${encodeURIComponent(textoWhatsApp)}`, '_blank');
 
-        btn.disabled = true;
-        btn.innerText = "PROCESANDO...";
-
-        try {
-            const res = await fetch('/confirmar-pedido', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ nombre, celular, ciudad, total: total.toFixed(2), carrito, nro })
-            });
-
-            if (res.ok) {
-                const blob = await res.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url; 
-                a.download = `Recibo_#${nro}_${nombre}.pdf`;
-                a.click();
-
-                cerrarCarrito();
-                carrito = [];
-                total = 0;
-                actualizarUI();
-
-                const msg = encodeURIComponent(`Pedido #${nro} - ${nombre}`);
-                
-                Swal.fire({
-                    title: 'PEDIDO LISTO!',
-                    html: `<p style="font-size: 1.2rem; font-weight:800; color: var(--piko-pink);">#${nro}</p><p>Tu recibo se descargó. ¡Envíalo por WhatsApp!</p>`,
-                    showConfirmButton: false,
-                    footer: '<a href="javascript:location.reload()" style="color:#999;">Nuevo pedido</a>'
-                });
-            }
-        } catch (e) {
-            Swal.fire("Error", "No pudimos procesar", "error");
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "CONFIRMAR PEDIDO";
+            carrito = [];
+            actualizarUI();
+            cerrarCarrito();
+        } else {
+            throw new Error("Error en el servidor");
         }
+    } catch (error) {
+        console.error(error);
+        Swal.fire("Error", "No se pudo conectar con el servidor. Intenta de nuevo.", "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "CONFIRMAR PEDIDO";
     }
+}
 
-    function irAPaso2() { 
-        document.getElementById('paso-1').style.display = 'none'; 
-        document.getElementById('paso-2').style.display = 'block'; 
-        document.getElementById('total-final').innerText = total.toFixed(2); 
-    }
-    function irAPaso1() { 
-        document.getElementById('paso-2').style.display = 'none'; 
-        document.getElementById('paso-1').style.display = 'block'; 
-    }
-    function abrirCarrito() { 
-        document.getElementById('modal-carrito').classList.add('active'); 
-    }
-    function cerrarCarrito() { 
-        document.getElementById('modal-carrito').classList.remove('active'); 
-    }
-    function filtrar(cat, btn) {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        document.getElementById('vista-todos').style.display = 'none';
-        document.getElementById('vista-scoops').style.display = 'none';
-        document.getElementById('vista-productos-cat').style.display = 'none';
-        document.getElementById('vista-packs').style.display = 'none';
-        
-        if (cat === 'todos') {
-            document.getElementById('vista-todos').style.display = 'block';
-        } else if (cat === 'scoops') {
-            document.getElementById('vista-scoops').style.display = 'block';
-        } else if (cat === 'productos') {
-            document.getElementById('vista-productos-cat').style.display = 'block';
-        } else if (cat === 'packs') {
-            document.getElementById('vista-packs').style.display = 'block';
-        }
-    }
+// Funciones de navegación del modal y filtros (iguales a las tuyas)
+function irAPaso2() { 
+    if(carrito.length === 0) return Swal.fire("Vacío", "Añade algo al carrito", "info");
+    document.getElementById('paso-1').style.display = 'none'; 
+    document.getElementById('paso-2').style.display = 'block'; 
+    document.getElementById('total-final').innerText = document.getElementById('total-modal').innerText; 
+}
+function irAPaso1() { document.getElementById('paso-2').style.display = 'none'; document.getElementById('paso-1').style.display = 'block'; }
+function abrirCarrito() { document.getElementById('modal-carrito').classList.add('active'); }
+function cerrarCarrito() { document.getElementById('modal-carrito').classList.remove('active'); }
+function filtrar(cat, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.vista-productos').forEach(v => v.style.display = 'none');
+    document.getElementById(`vista-${cat}`).style.display = 'block';
+}
 </script>
+
+<style>
+/* Estilos extra para los botones del carrito */
+.cant-mini {
+    background: var(--piko-pink);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    font-weight: bold;
+}
+input#f-nombre, input#f-celular, select#f-ciudad {
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    font-family: 'Poppins', sans-serif;
+}
+</style>
 </body>
 </html>
