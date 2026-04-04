@@ -7,6 +7,7 @@ const cors = require('cors');
 
 const app = express();
 
+// --- CONFIGURACIÓN DE MIDDLEWARES ---
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -14,21 +15,29 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// --- CONFIGURACIÓN DE GOOGLE SHEETS ---
 const SPREADSHEET_ID = '1bIaOsBjsI9m-5l2uGFi48SQGEjQFtnYt8T4rH5HFElg';
 
+// Limpieza profunda de variables de entorno para Render
+const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
 const privateKey = process.env.GOOGLE_PRIVATE_KEY 
-    ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n') 
+    ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/"/g, '') 
     : undefined;
+
+// Log de diagnóstico para los Logs de Render
+console.log("--- Estado de Credenciales ---");
+console.log("Email:", clientEmail ? "Cargado ✅" : "Faltante ❌");
+console.log("Key:", privateKey ? "Cargada ✅" : "Faltante ❌");
 
 const auth = new google.auth.GoogleAuth({
     credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        client_email: clientEmail,
         private_key: privateKey
     },
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
-// LISTA DE PRODUCTOS
+// --- LISTA DE PRODUCTOS ---
 const listaProductos = [
     { id: '1', titulo: 'Notas Cabeza Snoopy', cat: 'productos', precio: 12, img: '/img/notas-snoopy.jpg' },
     { id: '2', titulo: 'Binder Sanrio', cat: 'productos', precio: 26, img: '/img/binder-sanrio.jpg' },
@@ -46,10 +55,11 @@ const listaProductos = [
     { id: '14', titulo: 'Pack de My Melody', cat: 'packs', precio: 90, img: '/img/pack-mymelody.jpg' }
 ];
 
+// --- FUNCIÓN DE DISEÑO PDF ---
 function dibujarPDF(doc, data) {
     const colorPrincipal = '#ff85a2';
-    doc.fillColor('#2c2c2c').fontSize(25).font('Helvetica-Bold').text('Piko Kopi - Recibo', { align: 'center' });
-    doc.fillColor(colorPrincipal).fontSize(18).text('#' + data.nro, { align: 'center' });
+    doc.fillColor('#2c2c2c').fontSize(22).font('Helvetica-Bold').text('Piko Kopi Shop', { align: 'center' });
+    doc.fillColor(colorPrincipal).fontSize(16).text('Recibo de Pedido #' + data.nro, { align: 'center' });
     doc.moveDown();
     doc.fontSize(10).fillColor('#333').font('Helvetica');
     doc.text(`Cliente: ${data.nombre}`);
@@ -57,12 +67,18 @@ function dibujarPDF(doc, data) {
     doc.text(`Ciudad: ${data.ciudad}`);
     doc.moveDown();
     doc.text('--------------------------------------------------');
-    data.carrito.forEach(item => {
-        doc.text(`${item.titulo} (${item.variante}) x${item.cantidad} -- ${ (item.precio * item.cantidad).toFixed(2) } BS`);
-    });
+    
+    if (data.carrito && Array.isArray(data.carrito)) {
+        data.carrito.forEach(item => {
+            doc.text(`${item.titulo} (${item.variante || 'Único'}) x${item.cantidad} -- ${(item.precio * item.cantidad).toFixed(2)} BS`);
+        });
+    }
+    
     doc.text('--------------------------------------------------');
     doc.fontSize(14).fillColor(colorPrincipal).font('Helvetica-Bold').text(`TOTAL: ${data.total} BS`, { align: 'right' });
 }
+
+// --- RUTAS ---
 
 app.get('/', (req, res) => {
     res.render('index', { productos: listaProductos });
@@ -70,17 +86,18 @@ app.get('/', (req, res) => {
 
 app.post('/confirmar-pedido', async (req, res) => {
     const data = req.body;
-    
-    // Crear el resumen de productos para el Excel
-    const productosTexto = data.carrito.map(p => `${p.titulo} (${p.variante}) x${p.cantidad}`).join(', ');
+    console.log("Procesando pedido Nro:", data.nro);
 
     try {
-        // 1. Intentar Google Sheets primero
+        // 1. Preparar texto para Google Sheets
+        const productosResumen = data.carrito.map(p => `${p.titulo} (${p.variante}) x${p.cantidad}`).join(', ');
+
+        // 2. Intentar guardar en Google Sheets
         try {
             const sheets = google.sheets({ version: 'v4', auth });
             await sheets.spreadsheets.values.append({
                 spreadsheetId: SPREADSHEET_ID,
-                range: 'Sheet1!A:G', // OJO: Asegúrate que en tu Excel diga "Sheet1"
+                range: 'Sheet1!A:G', // IMPORTANTE: Tu pestaña de Excel debe llamarse Sheet1
                 valueInputOption: 'USER_ENTERED',
                 requestBody: {
                     values: [[
@@ -90,34 +107,35 @@ app.post('/confirmar-pedido', async (req, res) => {
                         data.ciudad,
                         'WhatsApp',
                         data.total,
-                        productosTexto
+                        productosResumen
                     ]]
                 }
             });
-            console.log("✅ Google Sheets OK");
-        } catch (e) {
-            console.error("❌ Error Sheets:", e.message);
+            console.log("✅ Google Sheets actualizado correctamente");
+        } catch (sheetError) {
+            console.error("❌ Error Sheets detallado:", sheetError.message);
         }
 
-        // 2. Generar PDF (Configuración de flujo correcto)
+        // 3. Generar y enviar PDF (Manejo correcto de Streams)
         const doc = new PDFDocument({ size: 'A5', margin: 40 });
         
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=PikoKopi_${data.nro}.pdf`);
+        res.setHeader('Content-Disposition', `attachment; filename=Recibo_PikoKopi_${data.nro}.pdf`);
 
-        doc.pipe(res); // El pipe debe ir antes de dibujar y terminar
+        doc.pipe(res);
         dibujarPDF(doc, data);
         doc.end();
 
     } catch (error) {
-        console.error("Error Crítico:", error);
+        console.error("❌ Error Crítico en el Servidor:", error);
         if (!res.headersSent) {
-            res.status(500).send("Error en el servidor");
+            res.status(500).json({ error: "Error interno", mensaje: error.message });
         }
     }
 });
 
+// --- INICIO ---
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor en puerto ${PORT}`);
+    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 });
