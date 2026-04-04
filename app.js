@@ -20,14 +20,17 @@ const SPREADSHEET_ID = '1bIaOsBjsI9m-5l2uGFi48SQGEjQFtnYt8T4rH5HFElg';
 
 // Limpieza profunda de variables de entorno para Render
 const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-const privateKey = process.env.GOOGLE_PRIVATE_KEY 
-    ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/"/g, '') 
+const rawKey = process.env.GOOGLE_PRIVATE_KEY;
+
+// Esta línea es CRUCIAL: Convierte el texto "\n" en saltos de línea reales y quita comillas
+const privateKey = rawKey 
+    ? rawKey.replace(/\\n/g, '\n').replace(/"/g, '').replace(/'/g, '').trim() 
     : undefined;
 
-// Log de diagnóstico para los Logs de Render
-console.log("--- Estado de Credenciales ---");
-console.log("Email:", clientEmail ? "Cargado ✅" : "Faltante ❌");
-console.log("Key:", privateKey ? "Cargada ✅" : "Faltante ❌");
+// Diagnóstico en los Logs de Render
+console.log("--- ESTADO DE CREDENCIALES ---");
+console.log("EMAIL DETECTADO:", clientEmail ? "SÍ ✅" : "NO ❌");
+console.log("KEY DETECTADA:", privateKey ? "SÍ ✅" : "NO ❌");
 
 const auth = new google.auth.GoogleAuth({
     credentials: {
@@ -55,7 +58,7 @@ const listaProductos = [
     { id: '14', titulo: 'Pack de My Melody', cat: 'packs', precio: 90, img: '/img/pack-mymelody.jpg' }
 ];
 
-// --- FUNCIÓN DE DISEÑO PDF ---
+// --- FUNCIÓN DISEÑO PDF ---
 function dibujarPDF(doc, data) {
     const colorPrincipal = '#ff85a2';
     doc.fillColor('#2c2c2c').fontSize(22).font('Helvetica-Bold').text('Piko Kopi Shop', { align: 'center' });
@@ -89,15 +92,14 @@ app.post('/confirmar-pedido', async (req, res) => {
     console.log("Procesando pedido Nro:", data.nro);
 
     try {
-        // 1. Preparar texto para Google Sheets
         const productosResumen = data.carrito.map(p => `${p.titulo} (${p.variante}) x${p.cantidad}`).join(', ');
 
-        // 2. Intentar guardar en Google Sheets
+        // 1. Google Sheets
         try {
             const sheets = google.sheets({ version: 'v4', auth });
             await sheets.spreadsheets.values.append({
                 spreadsheetId: SPREADSHEET_ID,
-                range: 'Sheet1!A:G', // IMPORTANTE: Tu pestaña de Excel debe llamarse Sheet1
+                range: 'Sheet1!A:G', // ASEGÚRATE QUE EN TU EXCEL DIGA "Sheet1"
                 valueInputOption: 'USER_ENTERED',
                 requestBody: {
                     values: [[
@@ -111,31 +113,27 @@ app.post('/confirmar-pedido', async (req, res) => {
                     ]]
                 }
             });
-            console.log("✅ Google Sheets actualizado correctamente");
-        } catch (sheetError) {
-            console.error("❌ Error Sheets detallado:", sheetError.message);
+            console.log("✅ Datos enviados a Google Sheets");
+        } catch (sheetErr) {
+            console.error("❌ Error Sheets:", sheetErr.message);
         }
 
-        // 3. Generar y enviar PDF (Manejo correcto de Streams)
+        // 2. PDF (Flujo de stream corregido)
         const doc = new PDFDocument({ size: 'A5', margin: 40 });
-        
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=Recibo_PikoKopi_${data.nro}.pdf`);
+        res.setHeader('Content-Disposition', `attachment; filename=Pedido_${data.nro}.pdf`);
 
         doc.pipe(res);
         dibujarPDF(doc, data);
         doc.end();
 
     } catch (error) {
-        console.error("❌ Error Crítico en el Servidor:", error);
-        if (!res.headersSent) {
-            res.status(500).json({ error: "Error interno", mensaje: error.message });
-        }
+        console.error("❌ Error Crítico:", error);
+        if (!res.headersSent) res.status(500).send("Error en el servidor");
     }
 });
 
-// --- INICIO ---
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+    console.log(`🚀 Servidor activo en puerto ${PORT}`);
 });
