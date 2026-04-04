@@ -7,20 +7,15 @@ const cors = require('cors');
 
 const app = express();
 
-// --- CONFIGURACIÓN DE MIDDLEWARES ---
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Rutas estáticas para CSS e Imágenes
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// --- CONFIGURACIÓN DE GOOGLE SHEETS ---
 const SPREADSHEET_ID = '1bIaOsBjsI9m-5l2uGFi48SQGEjQFtnYt8T4rH5HFElg';
 
-// TRUCO PARA RENDER: Convierte los \n de texto en saltos de línea reales
 const privateKey = process.env.GOOGLE_PRIVATE_KEY 
     ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n') 
     : undefined;
@@ -33,7 +28,7 @@ const auth = new google.auth.GoogleAuth({
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
-// --- LISTA DE PRODUCTOS ---
+// LISTA DE PRODUCTOS
 const listaProductos = [
     { id: '1', titulo: 'Notas Cabeza Snoopy', cat: 'productos', precio: 12, img: '/img/notas-snoopy.jpg' },
     { id: '2', titulo: 'Binder Sanrio', cat: 'productos', precio: 26, img: '/img/binder-sanrio.jpg' },
@@ -51,35 +46,23 @@ const listaProductos = [
     { id: '14', titulo: 'Pack de My Melody', cat: 'packs', precio: 90, img: '/img/pack-mymelody.jpg' }
 ];
 
-let pedidosGuardados = [];
-
-// --- FUNCIÓN DISEÑO PDF ---
 function dibujarPDF(doc, data) {
-    const margin = 30;
-    const pageWidth = doc.page.width;
-    const contentWidth = pageWidth - 2 * margin;
     const colorPrincipal = '#ff85a2';
-    
-    doc.fillColor('#2c2c2c').fontSize(30).font('Helvetica-Bold').text('Recibo Piko Kopi', { align: 'center' });
-    doc.fillColor(colorPrincipal).fontSize(20).text('#' + data.nro, { align: 'center' });
+    doc.fillColor('#2c2c2c').fontSize(25).font('Helvetica-Bold').text('Piko Kopi - Recibo', { align: 'center' });
+    doc.fillColor(colorPrincipal).fontSize(18).text('#' + data.nro, { align: 'center' });
     doc.moveDown();
-    doc.fontSize(10).fillColor('#000').font('Helvetica').text(`Cliente: ${data.nombre}`);
-    doc.text(`Celular: ${data.celular}`);
+    doc.fontSize(10).fillColor('#333').font('Helvetica');
+    doc.text(`Cliente: ${data.nombre}`);
+    doc.text(`WhatsApp: ${data.celular}`);
     doc.text(`Ciudad: ${data.ciudad}`);
     doc.moveDown();
-    doc.text('-------------------------------------------');
-    
-    if (data.carrito && Array.isArray(data.carrito)) {
-        data.carrito.forEach(item => {
-            doc.text(`${item.titulo} x${item.cantidad} - ${item.subtotal.toFixed(2)} BS`);
-        });
-    }
-    
-    doc.text('-------------------------------------------');
+    doc.text('--------------------------------------------------');
+    data.carrito.forEach(item => {
+        doc.text(`${item.titulo} (${item.variante}) x${item.cantidad} -- ${ (item.precio * item.cantidad).toFixed(2) } BS`);
+    });
+    doc.text('--------------------------------------------------');
     doc.fontSize(14).fillColor(colorPrincipal).font('Helvetica-Bold').text(`TOTAL: ${data.total} BS`, { align: 'right' });
 }
-
-// --- RUTAS ---
 
 app.get('/', (req, res) => {
     res.render('index', { productos: listaProductos });
@@ -87,53 +70,54 @@ app.get('/', (req, res) => {
 
 app.post('/confirmar-pedido', async (req, res) => {
     const data = req.body;
-    console.log("Procesando pedido:", data.nro);
+    
+    // Crear el resumen de productos para el Excel
+    const productosTexto = data.carrito.map(p => `${p.titulo} (${p.variante}) x${p.cantidad}`).join(', ');
 
     try {
-        // 1. Guardar en memoria
-        pedidosGuardados.push({ ...data, fecha: new Date().toLocaleString('es-BO') });
-
-        // 2. Intentar guardar en Google Sheets
+        // 1. Intentar Google Sheets primero
         try {
             const sheets = google.sheets({ version: 'v4', auth });
             await sheets.spreadsheets.values.append({
                 spreadsheetId: SPREADSHEET_ID,
-                range: 'Sheet1!A:G', // ASEGÚRATE QUE TU HOJA SE LLAME Sheet1
+                range: 'Sheet1!A:G', // OJO: Asegúrate que en tu Excel diga "Sheet1"
                 valueInputOption: 'USER_ENTERED',
                 requestBody: {
                     values: [[
-                        new Date().toLocaleString('es-BO'), 
-                        data.nombre, 
-                        data.celular, 
-                        data.ciudad, 
-                        data.transporte || 'S/N', 
-                        data.total, 
-                        data.productosTexto || 'Sin detalle'
+                        new Date().toLocaleString('es-BO', { timeZone: 'America/La_Paz' }),
+                        data.nombre,
+                        data.celular,
+                        data.ciudad,
+                        'WhatsApp',
+                        data.total,
+                        productosTexto
                     ]]
                 }
             });
-            console.log("✅ Datos enviados a Google Sheets");
-        } catch (sheetError) {
-            console.error("❌ Error en Google Sheets:", sheetError.message);
-            // El proceso sigue para no dejar al cliente sin su PDF
+            console.log("✅ Google Sheets OK");
+        } catch (e) {
+            console.error("❌ Error Sheets:", e.message);
         }
 
-        // 3. Generar y enviar PDF
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=Recibo_${data.nro}.pdf`);
+        // 2. Generar PDF (Configuración de flujo correcto)
         const doc = new PDFDocument({ size: 'A5', margin: 40 });
-        doc.pipe(res);
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=PikoKopi_${data.nro}.pdf`);
+
+        doc.pipe(res); // El pipe debe ir antes de dibujar y terminar
         dibujarPDF(doc, data);
         doc.end();
 
     } catch (error) {
-        console.error("❌ Error general:", error);
-        res.status(500).json({ error: "Error interno del servidor" });
+        console.error("Error Crítico:", error);
+        if (!res.headersSent) {
+            res.status(500).send("Error en el servidor");
+        }
     }
 });
 
-// --- INICIO DEL SERVIDOR ---
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor Piko Kopi activo en puerto ${PORT}`);
+    console.log(`🚀 Servidor en puerto ${PORT}`);
 });
