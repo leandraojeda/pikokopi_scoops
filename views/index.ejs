@@ -8,10 +8,81 @@
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --piko-pink: #ff85a2;
+            --piko-pastel: #fff0f3;
+            --piko-dark: #444;
+        }
+
+        /* Estilos base para modales */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 420px;
+            padding: 25px;
+            border-radius: 25px;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Botones extras */
+        .btn-ws {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+        .btn-ws:hover { background-color: #1eb954; transform: scale(1.02); }
+        .btn-secundario {
+            background-color: #f0f0f0;
+            color: #555;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .cant-mini {
+            background: var(--piko-pink);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-
-<%- include('partials/header') %>
 
 <nav class="navbar">
     <div class="nav-left">
@@ -26,7 +97,7 @@
     <div class="nav-right">
         <div class="header-total"><span id="nav-total-bs">0.00</span> BS</div>
         <div class="cart-wrapper" onclick="abrirCarrito()">
-            <i class="fa-solid fa-cart-shopping" style="font-size: 1.2rem;"></i>
+            <i class="fa-solid fa-cart-shopping"></i>
             <span id="cart-count-badge">0</span>
         </div>
     </div>
@@ -40,10 +111,10 @@
     <% if (typeof productos !== 'undefined' && productos.length > 0) { %>
         <% 
             const categorias = [
-                { id: 'todos', label: 'Todos', data: productos },
-                { id: 'scoops', label: '🍦 Scoops', data: productos.filter(p => p.cat === 'scoops') },
-                { id: 'productos-cat', label: '✨ Productos', data: productos.filter(p => p.cat === 'productos') },
-                { id: 'packs', label: '📦 Packs', data: productos.filter(p => p.cat === 'packs') }
+                { id: 'todos', data: productos },
+                { id: 'scoops', data: productos.filter(p => p.cat === 'scoops') },
+                { id: 'productos', data: productos.filter(p => p.cat === 'productos') },
+                { id: 'packs', data: productos.filter(p => p.cat === 'packs') }
             ];
         %>
 
@@ -51,28 +122,19 @@
             <div id="vista-<%= catObj.id %>" class="vista-productos" style="<%= catObj.id === 'todos' ? '' : 'display: none;' %> grid-column: 1 / -1;">
                 <div class="productos-container">
                     <% catObj.data.forEach(producto => { %>
-                        <div class="card item-producto" data-categoria="<%= producto.cat %>">
+                        <div class="card item-producto">
                             <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
                             <div class="card-info">
                                 <h3><%= producto.titulo %></h3>
-                                <div class="price" id="precio-<%= producto.id %>">
-                                    <%= producto.variantes && producto.variantes.length > 0 ? producto.variantes[0].precio : producto.precio %>
+                                <div class="price">
+                                    <span id="precio-<%= producto.id %>"><%= producto.precio %></span> BS
                                 </div>
-                                <% if (producto.variantes && producto.variantes.length > 0) { %>
-                                    <select class="select-tipo" id="select-<%= producto.id %>" onchange="document.getElementById('precio-<%= producto.id %>').innerText = this.value">
-                                        <% producto.variantes.forEach(v => { %>
-                                            <option value="<%= v.precio %>" data-nombre="<%= v.nombre %>"><%= v.nombre %></option>
-                                        <% }) %>
-                                    </select>
-                                <% } %>
-                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
-                                    <div class="cantidad-selector">
-                                        <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                        <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                        <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
-                                    </div>
-                                    <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR</button>
+                                <div class="cantidad-selector" style="margin-bottom: 10px;">
+                                    <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
+                                    <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                    <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
                                 </div>
+                                <button class="btn-add" style="width:100%" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>')">AÑADIR</button>
                             </div>
                         </div>
                     <% }) %>
@@ -85,83 +147,75 @@
 <div class="modal-overlay" id="modal-carrito">
     <div class="modal-content">
         <button class="close-modal" onclick="cerrarCarrito()">✕</button>
-        
         <div id="paso-1">
             <h2 style="color: var(--piko-pink); text-align: center; font-weight: 800; margin-bottom: 15px;">Tu Carrito ✨</h2>
-            <div id="lista-carrito" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;"></div>
-            <div style="border-top: 1px solid #eee; padding-top: 15px;">
-                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.2rem; color: var(--piko-dark); margin-bottom: 15px;">
+            <div id="lista-carrito" style="max-height: 350px; overflow-y: auto;"></div>
+            <div style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 10px;">
+                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.2rem;">
                     <span>TOTAL</span>
                     <span><span id="total-modal">0.00</span> BS</span>
                 </div>
-                <button class="btn-add" style="width:100%; padding: 12px;" onclick="irAPaso2()">CONTINUAR AL ENVÍO</button>
+                <button class="btn-add" style="width:100%; margin-top: 15px;" onclick="irAPaso2()">CONTINUAR</button>
             </div>
         </div>
 
         <div id="paso-2" style="display: none;">
-            <button onclick="irAPaso1()" style="background:none; border:none; cursor:pointer; color: #999; margin-bottom: 15px; font-weight: 600;"><i class="fa-solid fa-arrow-left"></i> Volver</button>
-            <h2 style="text-align: center; margin-bottom: 15px; color: var(--piko-pink); font-weight: 800;">Datos de Envío</h2>
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <input type="text" id="f-nombre" placeholder="Nombre completo" required>
-                <input type="tel" id="f-celular" placeholder="WhatsApp (ej. 77123456)" required>
-                <select id="f-ciudad">
+            <button onclick="irAPaso1()" style="background:none; border:none; color: #999; margin-bottom: 10px; cursor:pointer;"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+            <h2 style="text-align: center; color: var(--piko-pink); font-weight: 800;">Datos de Envío</h2>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                <input type="text" id="f-nombre" placeholder="Nombre completo" required style="padding:12px; border-radius:10px; border:1px solid #ddd;">
+                <input type="tel" id="f-celular" placeholder="WhatsApp (ej. 77123456)" required style="padding:12px; border-radius:10px; border:1px solid #ddd;">
+                <select id="f-ciudad" style="padding:12px; border-radius:10px; border:1px solid #ddd;">
                     <option value="Sucre">Sucre</option>
+                    <option value="Potosí">Potosí</option>
                     <option value="La Paz">La Paz</option>
                     <option value="Santa Cruz">Santa Cruz</option>
                     <option value="Cochabamba">Cochabamba</option>
                 </select>
-                <div style="margin-top: 10px; background: var(--piko-pastel); padding: 15px; border-radius: 10px;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="font-weight: 600;">Total:</span>
-                        <span style="font-weight: 800; color: var(--piko-pink); font-size: 1.3rem;"><span id="total-final">0.00</span> BS</span>
-                    </div>
-                </div>
                 <button type="button" id="btn-piko-final" class="btn-add" style="width: 100%;" onclick="enviarPedido()">CONFIRMAR PEDIDO</button>
             </div>
         </div>
     </div>
 </div>
 
-<%- include('partials/footer') %>
+<div class="modal-overlay" id="modal-exito">
+    <div class="modal-content" style="text-align: center; padding: 35px;">
+        <div style="font-size: 4.5rem; color: #75e097; margin-bottom: 15px;">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h2 style="color: var(--piko-pink); font-weight: 800; margin-bottom: 10px;">¡Pedido Hecho!</h2>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 25px;">Tu recibo se ha descargado. Por favor envíalo por WhatsApp para coordinar el pago.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button id="btn-ws-final" class="btn-ws">
+                <i class="fa-brands fa-whatsapp"></i> ENVIAR A WHATSAPP
+            </button>
+            <button id="btn-re-descargar" class="btn-secundario">
+                <i class="fa-solid fa-download"></i> VOLVER A DESCARGAR RECIBO
+            </button>
+            <button onclick="location.reload()" style="background:none; border:none; color:#bbb; margin-top:10px; cursor:pointer;">Cerrar y volver a la tienda</button>
+        </div>
+    </div>
+</div>
 
 <script>
 let carrito = JSON.parse(localStorage.getItem('piko_cart')) || [];
+let urlReciboActual = null; // Para guardar el blob del PDF
 
-document.addEventListener('DOMContentLoaded', () => {
-    actualizarUI();
-});
+document.addEventListener('DOMContentLoaded', () => { actualizarUI(); });
 
-function guardarCarrito() {
-    localStorage.setItem('piko_cart', JSON.stringify(carrito));
-}
-
-function sumarCantidad(id) {
-    const input = document.getElementById(`cant-${id}`);
-    input.value = parseInt(input.value) + 1;
-}
-
-function restarCantidad(id) {
-    const input = document.getElementById(`cant-${id}`);
-    if (parseInt(input.value) > 1) input.value = parseInt(input.value) - 1;
-}
+function guardarCarrito() { localStorage.setItem('piko_cart', JSON.stringify(carrito)); }
+function sumarCantidad(id) { const input = document.getElementById(`cant-${id}`); input.value = parseInt(input.value) + 1; }
+function restarCantidad(id) { const input = document.getElementById(`cant-${id}`); if (parseInt(input.value) > 1) input.value = parseInt(input.value) - 1; }
 
 function agregarAlCarrito(id, titulo, img) {
-    const inputCant = document.getElementById(`cant-${id}`);
-    const cantidad = parseInt(inputCant.value);
+    const cantidad = parseInt(document.getElementById(`cant-${id}`).value);
     const precio = parseFloat(document.getElementById(`precio-${id}`).innerText);
-    const sel = document.getElementById(`select-${id}`);
-    const variante = sel ? sel.options[sel.selectedIndex].getAttribute('data-nombre') : "Único";
-
-    // Buscar si ya existe el mismo producto con la misma variante
-    const existe = carrito.find(p => p.id === id && p.variante === variante);
-    if (existe) {
-        existe.cantidad += cantidad;
-    } else {
-        carrito.push({ id, titulo, img, variante, precio, cantidad });
-    }
-    
-    inputCant.value = 1;
-    Swal.fire({ title: "¡Añadido!", icon: "success", timer: 1000, showConfirmButton: false });
+    const existe = carrito.find(p => p.id === id);
+    if (existe) { existe.cantidad += cantidad; } 
+    else { carrito.push({ id, titulo, img, precio, cantidad, variante: "Único" }); }
+    document.getElementById(`cant-${id}`).value = 1;
+    Swal.fire({ title: "¡Añadido!", icon: "success", timer: 800, showConfirmButton: false });
     actualizarUI();
 }
 
@@ -178,36 +232,29 @@ function eliminarDelCarrito(idx) {
 }
 
 function actualizarUI() {
-    let total = 0;
-    let unidades = 0;
+    let total = 0, unidades = 0;
     const lista = document.getElementById('lista-carrito');
-    
     lista.innerHTML = carrito.map((p, idx) => {
-        const subtotal = p.precio * p.cantidad;
-        total += subtotal;
-        unidades += p.cantidad;
+        const sub = p.precio * p.cantidad;
+        total += sub; unidades += p.cantidad;
         return `
-            <div class="cart-item-row" style="display:flex; align-items:center; gap:10px; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-                <img src="${p.img}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px; border-bottom:1px solid #f9f9f9; padding-bottom:10px;">
+                <img src="${p.img}" style="width:50px; height:50px; border-radius:10px; object-fit:cover;">
                 <div style="flex:1">
-                    <div style="font-weight:600; font-size:0.85rem;">${p.titulo}</div>
-                    <small style="color:#999">${p.variante}</small>
-                    <div style="display:flex; align-items:center; gap:8px; margin-top:5px;">
+                    <div style="font-weight:600; font-size:0.85rem; line-height:1.2;">${p.titulo}</div>
+                    <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
                         <button onclick="cambiarCantidadCarrito(${idx}, -1)" class="cant-mini">-</button>
-                        <span>${p.cantidad}</span>
+                        <span style="font-weight:bold">${p.cantidad}</span>
                         <button onclick="cambiarCantidadCarrito(${idx}, 1)" class="cant-mini">+</button>
                     </div>
                 </div>
                 <div style="text-align:right">
-                    <div style="font-weight:800; color:var(--piko-pink);">${subtotal.toFixed(2)} BS</div>
-                    <button onclick="eliminarDelCarrito(${idx})" style="background:none; border:none; color:#ff4d4d; cursor:pointer;">Eliminar</button>
+                    <div style="font-weight:800; color:var(--piko-pink);">${sub.toFixed(2)} BS</div>
+                    <button onclick="eliminarDelCarrito(${idx})" style="background:none; border:none; color:#ff4d4d; font-size:0.7rem; cursor:pointer;">Eliminar</button>
                 </div>
-            </div>
-        `;
+            </div>`;
     }).join('');
-
-    if (carrito.length === 0) lista.innerHTML = "<p style='text-align:center; color:#999;'>Tu carrito está vacío 🌸</p>";
-
+    if (carrito.length === 0) lista.innerHTML = "<p style='text-align:center; color:#999; padding:20px;'>Tu carrito está vacío 🌸</p>";
     document.getElementById('nav-total-bs').innerText = total.toFixed(2);
     document.getElementById('total-modal').innerText = total.toFixed(2);
     document.getElementById('cart-count-badge').innerText = unidades;
@@ -220,93 +267,74 @@ async function enviarPedido() {
     const celular = document.getElementById('f-celular').value.trim();
     const ciudad = document.getElementById('f-ciudad').value;
     const total = document.getElementById('total-modal').innerText;
+    const nroPedido = (Math.floor(Math.random() * 9000) + 1000).toString();
 
     if(!nombre || !celular || carrito.length === 0) {
-        return Swal.fire("¡Atención!", "Completa tus datos y asegúrate de tener productos.", "warning");
+        return Swal.fire("¡Atención!", "Completa tus datos.", "warning");
     }
 
-    btn.disabled = true;
-    btn.innerText = "PROCESANDO...";
+    btn.disabled = true; btn.innerText = "PROCESANDO...";
 
     try {
-        // Importante: Usar URL absoluta o asegurar que la ruta sea correcta en Render
         const response = await fetch('/confirmar-pedido', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                nombre, 
-                celular, 
-                ciudad, 
-                total, 
-                carrito,
-                nro: (Math.floor(Math.random() * 9000) + 1000).toString() // Genera un nro temporal si no tienes contador
-            })
+            body: JSON.stringify({ nombre, celular, ciudad, total, carrito, nro: nroPedido })
         });
 
         if (response.ok) {
             const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
+            urlReciboActual = window.URL.createObjectURL(blob);
+            
+            // Descarga automática
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `Pedido_PikoKopi_${nombre}.pdf`;
+            a.href = urlReciboActual;
+            a.download = `Recibo_PikoKopi_${nroPedido}.pdf`;
             a.click();
 
-            Swal.fire("¡Éxito!", "Tu pedido ha sido procesado. Se descargará tu recibo.", "success");
-            
-            const textoWhatsApp = `¡Hola! He realizado un pedido a nombre de ${nombre}. Mi total es ${total} BS. Adjunto mi recibo PDF.`;
-            window.open(`https://wa.me/59177143374?text=${encodeURIComponent(textoWhatsApp)}`, '_blank');
-
-            carrito = [];
-            actualizarUI();
+            // Interfaz de éxito
             cerrarCarrito();
-        } else {
-            throw new Error("Error en el servidor");
-        }
-    } catch (error) {
-        console.error(error);
-        Swal.fire("Error", "No se pudo conectar con el servidor. Intenta de nuevo.", "error");
+            document.getElementById('modal-exito').classList.add('active');
+
+            // Configurar botones finales
+            document.getElementById('btn-ws-final').onclick = () => {
+                const texto = `¡Hola Piko Kopi! 🌸\nHe realizado un pedido:\n*Nombre:* ${nombre}\n*Nro:* #${nroPedido}\n*Total:* ${total} BS.\nAdjunto mi recibo PDF.`;
+                window.open(`https://wa.me/59177143374?text=${encodeURIComponent(texto)}`, '_blank');
+            };
+
+            document.getElementById('btn-re-descargar').onclick = () => {
+                const link = document.createElement('a');
+                link.href = urlReciboActual;
+                link.download = `Recibo_PikoKopi_${nroPedido}.pdf`;
+                link.click();
+            };
+
+            carrito = []; actualizarUI();
+        } else { throw new Error("Error servidor"); }
+    } catch (e) {
+        Swal.fire("Error", "No se pudo procesar el pedido.", "error");
     } finally {
-        btn.disabled = false;
-        btn.innerText = "CONFIRMAR PEDIDO";
+        btn.disabled = false; btn.innerText = "CONFIRMAR PEDIDO";
     }
 }
 
-// Funciones de navegación del modal y filtros (iguales a las tuyas)
-function irAPaso2() { 
-    if(carrito.length === 0) return Swal.fire("Vacío", "Añade algo al carrito", "info");
-    document.getElementById('paso-1').style.display = 'none'; 
-    document.getElementById('paso-2').style.display = 'block'; 
-    document.getElementById('total-final').innerText = document.getElementById('total-modal').innerText; 
-}
-function irAPaso1() { document.getElementById('paso-2').style.display = 'none'; document.getElementById('paso-1').style.display = 'block'; }
-function abrirCarrito() { document.getElementById('modal-carrito').classList.add('active'); }
-function cerrarCarrito() { document.getElementById('modal-carrito').classList.remove('active'); }
 function filtrar(cat, btn) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.querySelectorAll('.vista-productos').forEach(v => v.style.display = 'none');
     document.getElementById(`vista-${cat}`).style.display = 'block';
 }
+function abrirCarrito() { document.getElementById('modal-carrito').classList.add('active'); }
+function cerrarCarrito() { document.getElementById('modal-carrito').classList.remove('active'); }
+function irAPaso2() { 
+    if(carrito.length === 0) return;
+    document.getElementById('paso-1').style.display = 'none'; 
+    document.getElementById('paso-2').style.display = 'block'; 
+}
+function irAPaso1() { 
+    document.getElementById('paso-2').style.display = 'none'; 
+    document.getElementById('paso-1').style.display = 'block'; 
+}
 </script>
-
-<style>
-/* Estilos extra para los botones del carrito */
-.cant-mini {
-    background: var(--piko-pink);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    width: 25px;
-    height: 25px;
-    cursor: pointer;
-    font-weight: bold;
-}
-input#f-nombre, input#f-celular, select#f-ciudad {
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    font-family: 'Poppins', sans-serif;
-}
-</style>
 </body>
 </html>
