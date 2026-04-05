@@ -14,6 +14,10 @@
             --piko-pastel: #fff0f3;
             --piko-dark: #444;
         }
+
+        /* El body NO tiene padding-top fijo; el banner-wrapper lo recibe por JS */
+        body { padding-top: 0 !important; }
+
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -68,8 +72,8 @@
 
 <%- include('partials/header') %>
 
-<!-- NAVBAR -->
-<nav class="navbar">
+<!-- NAVBAR — con id para medirlo -->
+<nav class="navbar" id="main-navbar">
     <div class="nav-left">
         <a href="/" class="logo">PIKO <span>KOPI</span></a>
     </div>
@@ -88,22 +92,24 @@
     </div>
 </nav>
 
-<!-- BANNER -->
-<section class="banner-section">
-    <picture>
-        <source media="(min-width: 1024px)" srcset="/img/banner-pc.png">
-        <source media="(min-width: 768px)" srcset="/img/banner-tab.png">
-        <img src="/img/banner-cel.png" alt="Piko Kopi Banner Principal">
-    </picture>
-</section>
+<!-- BANNER — id="banner-wrapper" para que el JS le ponga el margin-top correcto -->
+<div id="banner-wrapper">
+    <section class="banner-section">
+        <picture>
+            <source media="(min-width: 1024px)" srcset="/img/banner-pc.png">
+            <source media="(min-width: 768px)" srcset="/img/banner-tab.png">
+            <img src="/img/banner-cel.png" alt="Piko Kopi Banner Principal">
+        </picture>
+    </section>
+</div>
 
 <!-- CONTENIDO PRINCIPAL -->
 <main id="main-container">
     <% if (typeof productos !== 'undefined' && productos.length > 0) { %>
-        <% 
+        <%
             const scoops = productos.filter(p => p.cat === 'scoops');
-            const packs = productos.filter(p => p.cat === 'packs');
-            const prods = productos.filter(p => p.cat === 'productos');
+            const packs  = productos.filter(p => p.cat === 'packs');
+            const prods  = productos.filter(p => p.cat === 'productos');
         %>
 
         <!-- VISTA: TODOS -->
@@ -180,11 +186,11 @@
                         <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
                         <div class="card-info">
                             <h3><%= producto.titulo %></h3>
-                            <div class="price"><span id="precio-<%= producto.id %>"><%= producto.precio %></span> BS</div>
+                            <div class="price"><span id="precio-s-<%= producto.id %>"><%= producto.precio %></span> BS</div>
                             <div class="cantidad-selector">
-                                <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
+                                <button class="cantidad-btn" onclick="restarCantidad('s-<%= producto.id %>')">−</button>
+                                <input type="number" id="cant-s-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                <button class="cantidad-btn" onclick="sumarCantidad('s-<%= producto.id %>')">+</button>
                             </div>
                             <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>)">AÑADIR</button>
                         </div>
@@ -201,11 +207,11 @@
                         <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
                         <div class="card-info">
                             <h3><%= producto.titulo %></h3>
-                            <div class="price"><span id="precio-<%= producto.id %>"><%= producto.precio %></span> BS</div>
+                            <div class="price"><span id="precio-p-<%= producto.id %>"><%= producto.precio %></span> BS</div>
                             <div class="cantidad-selector">
-                                <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
+                                <button class="cantidad-btn" onclick="restarCantidad('p-<%= producto.id %>')">−</button>
+                                <input type="number" id="cant-p-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                <button class="cantidad-btn" onclick="sumarCantidad('p-<%= producto.id %>')">+</button>
                             </div>
                             <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>)">AÑADIR</button>
                         </div>
@@ -222,11 +228,11 @@
                         <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
                         <div class="card-info">
                             <h3><%= producto.titulo %></h3>
-                            <div class="price"><span id="precio-<%= producto.id %>"><%= producto.precio %></span> BS</div>
+                            <div class="price"><span id="precio-k-<%= producto.id %>"><%= producto.precio %></span> BS</div>
                             <div class="cantidad-selector">
-                                <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
+                                <button class="cantidad-btn" onclick="restarCantidad('k-<%= producto.id %>')">−</button>
+                                <input type="number" id="cant-k-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                <button class="cantidad-btn" onclick="sumarCantidad('k-<%= producto.id %>')">+</button>
                             </div>
                             <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>)">AÑADIR</button>
                         </div>
@@ -241,8 +247,8 @@
 <div class="modal-overlay" id="modal-carrito">
     <div class="modal-content">
         <button class="close-modal" onclick="cerrarCarrito()">✕</button>
-        
-        <!-- PASO 1: CARRITO -->
+
+        <!-- PASO 1: LISTA DEL CARRITO -->
         <div id="paso-1">
             <h2 style="color: var(--piko-pink); text-align: center; font-weight: 800; margin-bottom: 20px;">Tu Carrito ✨</h2>
             <div id="lista-carrito" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;"></div>
@@ -259,11 +265,11 @@
         <div id="paso-2" style="display: none;">
             <button onclick="irAPaso1()" style="background:none; border:none; color: #aaa; margin-bottom: 15px; cursor:pointer; font-weight: 600;">← Volver al carrito</button>
             <h2 style="text-align: center; color: var(--piko-pink); font-weight: 800; margin-bottom: 15px;">Datos de Envío</h2>
-            
+
             <div style="display: flex; flex-direction: column; gap: 12px;">
                 <input type="text" id="f-nombre" placeholder="Nombre completo" class="piko-input">
                 <input type="tel" id="f-celular" placeholder="WhatsApp (ej. 77123456)" class="piko-input">
-                
+
                 <select id="f-ciudad" class="piko-input" onchange="gestionarTransportadora()">
                     <option value="">-- Selecciona ciudad --</option>
                     <option value="Sucre">Sucre (Chuquisaca)</option>
@@ -288,7 +294,7 @@
 
                 <input type="text" id="otra-ciudad" placeholder="Especifica tu ciudad" class="piko-input hidden">
 
-                <!-- SUCRE: RECOJO O DELIVERY -->
+                <!-- SUCRE -->
                 <div id="opciones-sucre" class="hidden">
                     <label style="font-size: 0.9rem; font-weight: 600; color: #666; display: block; margin-bottom: 8px;">¿Cómo recibirás? 📦</label>
                     <select id="recojo-sucre" class="piko-input">
@@ -299,7 +305,7 @@
                     </select>
                 </div>
 
-                <!-- OTRAS CIUDADES: TRANSPORTADORA -->
+                <!-- OTRAS CIUDADES -->
                 <div id="opciones-transportadora" class="hidden">
                     <label style="font-size: 0.9rem; font-weight: 600; color: #666; display: block; margin-bottom: 8px;">Transportadora 🚚</label>
                     <select id="f-transportadora" class="piko-input" onchange="mostrarCampoTransportadora()">
@@ -316,10 +322,9 @@
                         <option value="Otra">Otra transportadora (escribir)</option>
                     </select>
 
-                    <!-- Nombre custom de transportadora -->
                     <input type="text" id="f-otra-transportadora" placeholder="Nombre de la transportadora" class="piko-input hidden" style="margin-top: 8px;">
 
-                    <!-- SUCURSAL: Terminal u Otra -->
+                    <!-- SUCURSAL -->
                     <div id="bloque-sucursal" class="hidden" style="margin-top: 8px;">
                         <label style="font-size: 0.85rem; font-weight: 600; color: #666; display: block; margin-bottom: 6px;">Sucursal / Zona 📍</label>
                         <select id="f-tipo-sucursal" class="piko-input" onchange="gestionarSucursal()">
@@ -349,118 +354,134 @@
 <script>
 let carrito = JSON.parse(localStorage.getItem('piko_cart')) || [];
 
-const transportadorasPorCiudad = {
-    'La Paz': ['Amazon Express', 'El Mexicano', 'Bolivar', 'El Dorado', 'Quirquincho', 'Copacabana', 'Otra'],
-    'El Alto': ['Amazon Express', 'El Mexicano', 'El Dorado', 'Quirquincho', 'Copacabana', 'Otra'],
-    'Oruro': ['San Miguel', 'Bustillos', 'Amazon Express', 'Otra'],
-    'Potosí': ['Rapiditos del Sur', 'Amazon Express', 'Otra'],
-    'Villazon': ['Rapiditos del Sur', 'Otra'],
-    'Tupiza': ['Rapiditos del Sur', 'Otra'],
-    'Uyuni': ['Rapiditos del Sur', 'Otra'],
-    'Cochabamba': ['Bolivar', 'El Dorado', 'Quirquincho', 'Copacabana', 'Amazon Express', 'Otra'],
-    'Quillacollo': ['Bolivar', 'El Dorado', 'Quirquincho', 'Copacabana', 'Amazon Express', 'Otra'],
-    'Tarija': ['Rapiditos del Sur', 'El Mexicano', 'Amazon Express', 'Otra'],
-    'Beremejo': ['Rapiditos del Sur', 'El Mexicano', 'Otra'],
-    'Camargo': ['El Mexicano', 'Rapiditos del Sur', 'Otra'],
-    'Santa Cruz': ['Amazon Express', 'El Mexicano', 'El Dorado', 'Copacabana', 'Otra'],
-    'Beni': ['Amazon Express', 'Otra'],
-    'Pando': ['Amazon Express', 'Otra'],
-    'Yotala': ['Amazon Express', 'Rapiditos del Sur', 'Otra']
-};
+// ── OFFSET DINÁMICO DEL NAVBAR ───────────────────────────────────────────────
+// Mide el bloque fijo total (ticker + navbar) y aplica ese margin-top al banner,
+// de modo que nunca se solapen, en ningún dispositivo ni tamaño de pantalla.
+function ajustarOffsetNavbar() {
+    const navbar  = document.getElementById('main-navbar');
+    const banner  = document.getElementById('banner-wrapper');
+    const ticker  = document.querySelector('.ticker-wrapper');
+    if (!navbar || !banner) return;
 
-document.addEventListener('DOMContentLoaded', actualizarUI);
+    const tickerH = ticker ? ticker.getBoundingClientRect().height : 0;
+    const navbarH = navbar.getBoundingClientRect().height;
+    banner.style.marginTop = (tickerH + navbarH) + 'px';
+}
+window.addEventListener('load',   ajustarOffsetNavbar);
+window.addEventListener('resize', ajustarOffsetNavbar);
+document.fonts && document.fonts.ready.then(ajustarOffsetNavbar);
+// También justo al ejecutar el script (sin esperar a load)
+document.addEventListener('DOMContentLoaded', () => {
+    ajustarOffsetNavbar();
+    actualizarUI();
+});
 
+// ── CARRITO ──────────────────────────────────────────────────────────────────
 function guardarCarrito() { localStorage.setItem('piko_cart', JSON.stringify(carrito)); }
 
-function sumarCantidad(id) { 
-    const inp = document.getElementById(`cant-${id}`);
-    inp.value = parseInt(inp.value) + 1;
+function sumarCantidad(id) {
+    const inp = document.getElementById('cant-' + id);
+    if (inp) inp.value = parseInt(inp.value) + 1;
 }
 
-function restarCantidad(id) { 
-    const inp = document.getElementById(`cant-${id}`);
-    if(parseInt(inp.value) > 1) inp.value = parseInt(inp.value) - 1;
+function restarCantidad(id) {
+    const inp = document.getElementById('cant-' + id);
+    if (inp && parseInt(inp.value) > 1) inp.value = parseInt(inp.value) - 1;
 }
 
-// Cambiar cantidad directamente desde el carrito
 function cambiarCantidadCarrito(idx, delta) {
     carrito[idx].cantidad += delta;
-    if(carrito[idx].cantidad < 1) carrito[idx].cantidad = 1;
+    if (carrito[idx].cantidad < 1) carrito[idx].cantidad = 1;
     actualizarUI();
 }
 
 function agregarAlCarrito(id, titulo, img, precio) {
-    const cantidad = parseInt(document.getElementById(`cant-${id}`).value);
+    const inp = document.getElementById('cant-' + id);
+    const cantidad = inp ? parseInt(inp.value) : 1;
     const existe = carrito.find(p => p.id === id);
-    
-    if(existe) existe.cantidad += cantidad;
+
+    if (existe) existe.cantidad += cantidad;
     else carrito.push({ id, titulo, img, precio, cantidad });
-    
-    document.getElementById(`cant-${id}`).value = 1;
-    
+
+    if (inp) inp.value = 1;
+
     Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 }).fire({
-        icon: 'success', title: `¡${titulo} añadido! ✨`
+        icon: 'success', title: '¡' + titulo + ' añadido! ✨'
     });
-    
+
     actualizarUI();
 }
 
 function actualizarUI() {
     let total = 0, unidades = 0;
     const lista = document.getElementById('lista-carrito');
-    
+
     lista.innerHTML = carrito.map((p, idx) => {
         const sub = p.precio * p.cantidad;
         total += sub;
         unidades += p.cantidad;
-        return `
-            <div class="carrito-item">
-                <img src="${p.img}" alt="${p.titulo}">
-                <div class="carrito-item-info">
-                    <div class="carrito-item-nombre">${p.titulo}</div>
-                    <div class="carrito-item-precio">${sub.toFixed(2)} BS</div>
-                </div>
-                <div class="carrito-item-controles">
-                    <button onclick="cambiarCantidadCarrito(${idx}, -1)">−</button>
-                    <span>${p.cantidad}</span>
-                    <button onclick="cambiarCantidadCarrito(${idx}, 1)">+</button>
-                </div>
-                <button class="carrito-item-borrar" onclick="carrito.splice(${idx}, 1); actualizarUI();">×</button>
-            </div>`;
+        return '<div class="carrito-item">' +
+            '<img src="' + p.img + '" alt="' + p.titulo + '">' +
+            '<div class="carrito-item-info">' +
+                '<div class="carrito-item-nombre">' + p.titulo + '</div>' +
+                '<div class="carrito-item-precio">' + sub.toFixed(2) + ' BS</div>' +
+            '</div>' +
+            '<div class="carrito-item-controles">' +
+                '<button onclick="cambiarCantidadCarrito(' + idx + ', -1)">−</button>' +
+                '<span>' + p.cantidad + '</span>' +
+                '<button onclick="cambiarCantidadCarrito(' + idx + ', 1)">+</button>' +
+            '</div>' +
+            '<button class="carrito-item-borrar" onclick="carrito.splice(' + idx + ', 1); actualizarUI();">×</button>' +
+        '</div>';
     }).join('');
-    
-    if(carrito.length === 0) {
+
+    if (carrito.length === 0) {
         lista.innerHTML = "<div style='text-align:center; color:#bbb; padding:30px;'>Tu carrito está vacío 🌸</div>";
     }
-    
-    document.getElementById('nav-total-bs').innerText = total.toFixed(2);
-    document.getElementById('total-modal').innerText = total.toFixed(2);
-    document.getElementById('total-final').innerText = total.toFixed(2);
+
+    document.getElementById('nav-total-bs').innerText    = total.toFixed(2);
+    document.getElementById('total-modal').innerText      = total.toFixed(2);
+    document.getElementById('total-final').innerText      = total.toFixed(2);
     document.getElementById('cart-count-badge').innerText = unidades;
-    
+
     guardarCarrito();
 }
 
+// ── TRANSPORTADORA / SUCURSAL ─────────────────────────────────────────────────
+const transportadorasPorCiudad = {
+    'La Paz':       ['Amazon Express','El Mexicano','Bolivar','El Dorado','Quirquincho','Copacabana','Otra'],
+    'El Alto':      ['Amazon Express','El Mexicano','El Dorado','Quirquincho','Copacabana','Otra'],
+    'Oruro':        ['San Miguel','Bustillos','Amazon Express','Otra'],
+    'Potosí':       ['Rapiditos del Sur','Amazon Express','Otra'],
+    'Villazon':     ['Rapiditos del Sur','Otra'],
+    'Tupiza':       ['Rapiditos del Sur','Otra'],
+    'Uyuni':        ['Rapiditos del Sur','Otra'],
+    'Cochabamba':   ['Bolivar','El Dorado','Quirquincho','Copacabana','Amazon Express','Otra'],
+    'Quillacollo':  ['Bolivar','El Dorado','Quirquincho','Copacabana','Amazon Express','Otra'],
+    'Tarija':       ['Rapiditos del Sur','El Mexicano','Amazon Express','Otra'],
+    'Beremejo':     ['Rapiditos del Sur','El Mexicano','Otra'],
+    'Camargo':      ['El Mexicano','Rapiditos del Sur','Otra'],
+    'Santa Cruz':   ['Amazon Express','El Mexicano','El Dorado','Copacabana','Otra'],
+    'Beni':         ['Amazon Express','Otra'],
+    'Pando':        ['Amazon Express','Otra'],
+    'Yotala':       ['Amazon Express','Rapiditos del Sur','Otra']
+};
+
 function gestionarTransportadora() {
     const ciudad = document.getElementById('f-ciudad').value;
-    
     document.getElementById('otra-ciudad').classList.toggle('hidden', ciudad !== 'Otra');
     document.getElementById('opciones-sucre').classList.toggle('hidden', ciudad !== 'Sucre');
     document.getElementById('opciones-transportadora').classList.toggle('hidden', ciudad === 'Sucre' || !ciudad || ciudad === 'Otra');
-    
-    // Resetear sucursal al cambiar ciudad
     document.getElementById('bloque-sucursal').classList.add('hidden');
     document.getElementById('f-sucursal-custom').classList.add('hidden');
-    
-    if(ciudad && ciudad !== 'Sucre' && ciudad !== 'Otra') {
+
+    if (ciudad && ciudad !== 'Sucre' && ciudad !== 'Otra') {
         const transSelect = document.getElementById('f-transportadora');
-        const opcionesDisponibles = transportadorasPorCiudad[ciudad] || ['Otra'];
-        
+        const opciones = transportadorasPorCiudad[ciudad] || ['Otra'];
         transSelect.innerHTML = '<option value="">-- Selecciona transportadora --</option>';
-        opcionesDisponibles.forEach(trans => {
+        opciones.forEach(t => {
             const opt = document.createElement('option');
-            opt.value = trans;
-            opt.textContent = trans;
+            opt.value = t; opt.textContent = t;
             transSelect.appendChild(opt);
         });
     }
@@ -468,13 +489,10 @@ function gestionarTransportadora() {
 
 function mostrarCampoTransportadora() {
     const trans = document.getElementById('f-transportadora').value;
-    // Nombre custom si elige "Otra"
     document.getElementById('f-otra-transportadora').classList.toggle('hidden', trans !== 'Otra');
-    // Bloque de sucursal: mostrar si eligió alguna transportadora (que no sea vacío ni "Otra")
     const mostrarSucursal = trans !== '' && trans !== 'Otra';
     document.getElementById('bloque-sucursal').classList.toggle('hidden', !mostrarSucursal);
-    // Resetear campo custom de sucursal
-    if(!mostrarSucursal) {
+    if (!mostrarSucursal) {
         document.getElementById('f-tipo-sucursal').value = 'Terminal';
         document.getElementById('f-sucursal-custom').classList.add('hidden');
     }
@@ -485,143 +503,124 @@ function gestionarSucursal() {
     document.getElementById('f-sucursal-custom').classList.toggle('hidden', tipo !== 'Otra');
 }
 
+// ── ENVIAR PEDIDO ─────────────────────────────────────────────────────────────
 async function enviarPedido() {
     const nombre = document.getElementById('f-nombre').value.trim();
     const celular = document.getElementById('f-celular').value.trim();
     let ciudad = document.getElementById('f-ciudad').value;
     const otraCiudad = document.getElementById('otra-ciudad').value.trim();
-    
-    if(ciudad === 'Otra') ciudad = otraCiudad;
-    
-    if(!nombre || !celular || !ciudad || carrito.length === 0) {
-        return Swal.fire("¡Ups!", "Completa todos los datos.", "warning");
+    if (ciudad === 'Otra') ciudad = otraCiudad;
+
+    if (!nombre || !celular || !ciudad || carrito.length === 0) {
+        return Swal.fire('¡Ups!', 'Completa todos los datos.', 'warning');
     }
 
     let infoEnvio = '';
-    if(ciudad === 'Sucre') {
+    if (ciudad === 'Sucre') {
         infoEnvio = document.getElementById('recojo-sucre').value;
     } else {
         const trans = document.getElementById('f-transportadora').value;
         const otraTrans = document.getElementById('f-otra-transportadora').value.trim();
         const nombreTrans = trans === 'Otra' ? otraTrans : trans;
-
-        // Obtener sucursal
         let sucursal = '';
-        if(trans && trans !== 'Otra') {
+        if (trans && trans !== 'Otra') {
             const tipoSucursal = document.getElementById('f-tipo-sucursal').value;
-            if(tipoSucursal === 'Otra') {
-                sucursal = document.getElementById('f-sucursal-custom').value.trim();
-            } else {
-                sucursal = 'Terminal';
-            }
+            sucursal = tipoSucursal === 'Otra'
+                ? document.getElementById('f-sucursal-custom').value.trim()
+                : 'Terminal';
         }
-
-        infoEnvio = `${nombreTrans}${sucursal ? ' - ' + sucursal : ''}`;
+        infoEnvio = nombreTrans + (sucursal ? ' - ' + sucursal : '');
     }
 
     const total = document.getElementById('total-final').innerText;
-
-    // Número de pedido con formato 0001, 0002, etc.
-    let contadorActual = parseInt(localStorage.getItem('piko_contador') || '0') + 1;
-    localStorage.setItem('piko_contador', contadorActual);
-    const nroPedido = String(contadorActual).padStart(4, '0');
-
     const btn = document.getElementById('btn-piko-final');
     btn.disabled = true;
-    btn.innerText = "PROCESANDO...";
+    btn.innerText = 'PROCESANDO...';
 
     try {
+        // ── PASO 1: obtener número de pedido global desde el servidor ──────────
+        const nroResp = await fetch('/nuevo-numero');
+        const nroData = await nroResp.json();
+        const nroPedido = nroData.nro; // ej. "0007"
+
+        // ── PASO 2: confirmar pedido y recibir PDF ─────────────────────────────
         const response = await fetch('/confirmar-pedido', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                nombre, celular, ciudad, total, carrito, nro: nroPedido, envio: infoEnvio
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, celular, ciudad, total, carrito, nro: nroPedido, envio: infoEnvio })
         });
 
-        if(response.ok) {
+        if (response.ok) {
             const blob = await response.blob();
             const pdfUrl = window.URL.createObjectURL(blob);
 
-            // Descargar automáticamente
+            // Descarga automática
             const a = document.createElement('a');
-            a.href = pdfUrl;
-            a.download = `Recibo_${nroPedido}.pdf`;
-            a.click();
+            a.href = pdfUrl; a.download = 'Recibo_' + nroPedido + '.pdf'; a.click();
 
-            // Guardar items para el mensaje de WhatsApp antes de limpiar
+            // Guardar items para el mensaje WA antes de limpiar
             localStorage.setItem('piko_last_items', JSON.stringify(carrito));
 
-            // Limpiar carrito
+            // Limpiar carrito, volver al paso 1 (datos de envío se conservan)
             carrito = [];
             actualizarUI();
             irAPaso1();
             cerrarCarrito();
 
-            // Armar mensaje de WhatsApp
-            const itemsTexto = JSON.parse(localStorage.getItem('piko_last_items') || '[]')
-                .map(p => `• ${p.titulo} x${p.cantidad}`).join('%0A') || '';
+            // Mensaje de WhatsApp
             const mensajeWA = encodeURIComponent(
-                `¡Hola! 🌸 Soy *${nombre}*\n` +
-                `Pedido N° *${nroPedido}*\n` +
-                `Ciudad: ${ciudad} | Envío: ${infoEnvio}\n` +
-                `Total: *${total} BS*\n` 
+                '¡Hola! 🌸 Soy *' + nombre + '*\n' +
+                'Pedido N° *' + nroPedido + '*\n' +
+                'Ciudad: ' + ciudad + ' | Envío: ' + infoEnvio + '\n' +
+                'Total: *' + total + ' BS*\n' +
+                '¡Ya envié mi recibo! 🛍️'
             );
-            const waUrl = `https://wa.me/59164723077?text=${mensajeWA}`;
+            const waUrl = 'https://wa.me/59177143374?text=' + mensajeWA;
 
-            // SweetAlert con dos botones
             Swal.fire({
                 title: '¡Pedido listo! 🎉',
-                html: `
-                    <p style="color:#666; margin-bottom:18px;">Tu recibo <strong>#${nroPedido}</strong> ya se descargó.<br>Envíalo por WhatsApp para confirmar tu pedido.</p>
-                    <div style="display:flex; flex-direction:column; gap:10px;">
-                        <a href="${waUrl}" target="_blank"
-                           style="display:block; background:#25D366; color:white; padding:12px 20px; border-radius:10px; font-weight:700; font-family:Poppins; text-decoration:none; font-size:0.95rem;">
-                           📲 Enviar por WhatsApp
-                        </a>
-                        <button onclick="reDescargarRecibo('${pdfUrl}','${nroPedido}')"
-                            style="background:#ff85a2; color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:700; font-family:Poppins; cursor:pointer; font-size:0.95rem;">
-                            ⬇️ Volver a descargar recibo
-                        </button>
-                    </div>
-                `,
+                html:
+                    '<p style="color:#666; margin-bottom:18px;">Tu recibo <strong>#' + nroPedido + '</strong> ya se descargó.<br>Envíalo por WhatsApp para confirmar.</p>' +
+                    '<div style="display:flex; flex-direction:column; gap:10px;">' +
+                        '<a href="' + waUrl + '" target="_blank" style="display:block; background:#25D366; color:white; padding:12px 20px; border-radius:10px; font-weight:700; font-family:Poppins; text-decoration:none; font-size:0.95rem;">📲 Enviar por WhatsApp</a>' +
+                        '<button onclick="reDescargarRecibo(\'' + pdfUrl + '\',\'' + nroPedido + '\')" style="background:#ff85a2; color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:700; font-family:Poppins; cursor:pointer; font-size:0.95rem;">⬇️ Volver a descargar recibo</button>' +
+                    '</div>',
                 showConfirmButton: false,
-                showCloseButton: true,
-                customClass: { popup: 'swal-piko' }
+                showCloseButton: true
             });
         }
     } catch(e) {
-        Swal.fire("Error", "No pudimos procesar el pedido.", "error");
+        Swal.fire('Error', 'No pudimos procesar el pedido.', 'error');
     } finally {
         btn.disabled = false;
-        btn.innerText = "CONFIRMAR PEDIDO";
+        btn.innerText = 'CONFIRMAR PEDIDO';
     }
 }
 
 function reDescargarRecibo(url, nro) {
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `Recibo_${nro}.pdf`;
-    a.click();
+    a.href = url; a.download = 'Recibo_' + nro + '.pdf'; a.click();
 }
 
+// ── NAVEGACIÓN ────────────────────────────────────────────────────────────────
 function filtrar(cat, btn) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.querySelectorAll('[id^="vista-"]').forEach(v => v.style.display = 'none');
-    document.getElementById(`vista-${cat}`).style.display = 'block';
+    document.getElementById('vista-' + cat).style.display = 'block';
 }
 
-function abrirCarrito() { document.getElementById('modal-carrito').classList.add('active'); }
+function abrirCarrito()  { document.getElementById('modal-carrito').classList.add('active'); }
 function cerrarCarrito() { document.getElementById('modal-carrito').classList.remove('active'); }
-function irAPaso2() { 
-    if(carrito.length === 0) return Swal.fire("Vacío", "Añade productos primero.", "info");
-    document.getElementById('paso-1').style.display = 'none'; 
-    document.getElementById('paso-2').style.display = 'block'; 
+
+function irAPaso2() {
+    if (carrito.length === 0) return Swal.fire('Vacío', 'Añade productos primero.', 'info');
+    document.getElementById('paso-1').style.display = 'none';
+    document.getElementById('paso-2').style.display = 'block';
 }
-function irAPaso1() { 
-    document.getElementById('paso-2').style.display = 'none'; 
-    document.getElementById('paso-1').style.display = 'block'; 
+function irAPaso1() {
+    document.getElementById('paso-2').style.display = 'none';
+    document.getElementById('paso-1').style.display = 'block';
 }
 </script>
 
