@@ -178,11 +178,11 @@
                             <h3><%= producto.titulo %></h3>
                             <div class="price"><span><%= producto.precio %></span> BS</div>
                             <div class="cantidad-selector">
-                                <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
+                                <button class="cantidad-btn" onclick="restarCantidad('sc-<%= producto.id %>')">−</button>
+                                <input type="number" id="cant-sc-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                <button class="cantidad-btn" onclick="sumarCantidad('sc-<%= producto.id %>')">+</button>
                             </div>
-                            <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>)">AÑADIR</button>
+                            <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>, 'sc-<%= producto.id %>')">AÑADIR</button>
                         </div>
                     </div>
                 <% }) %>
@@ -198,11 +198,11 @@
                             <h3><%= producto.titulo %></h3>
                             <div class="price"><span><%= producto.precio %></span> BS</div>
                             <div class="cantidad-selector">
-                                <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
+                                <button class="cantidad-btn" onclick="restarCantidad('pr-<%= producto.id %>')">−</button>
+                                <input type="number" id="cant-pr-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                <button class="cantidad-btn" onclick="sumarCantidad('pr-<%= producto.id %>')">+</button>
                             </div>
-                            <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>)">AÑADIR</button>
+                            <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>, 'pr-<%= producto.id %>')">AÑADIR</button>
                         </div>
                     </div>
                 <% }) %>
@@ -218,11 +218,11 @@
                             <h3><%= producto.titulo %></h3>
                             <div class="price"><span><%= producto.precio %></span> BS</div>
                             <div class="cantidad-selector">
-                                <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
+                                <button class="cantidad-btn" onclick="restarCantidad('pk-<%= producto.id %>')">−</button>
+                                <input type="number" id="cant-pk-<%= producto.id %>" class="cantidad-input" value="1" min="1">
+                                <button class="cantidad-btn" onclick="sumarCantidad('pk-<%= producto.id %>')">+</button>
                             </div>
-                            <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>)">AÑADIR</button>
+                            <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>, 'pk-<%= producto.id %>')">AÑADIR</button>
                         </div>
                     </div>
                 <% }) %>
@@ -380,7 +380,7 @@ const CODIGOS_DESCUENTO = {
     'DGRUPO10': {
         tipo: 'porcentaje',
         valor: 10,
-        desde: new Date('2026-04-05T00:00:00-04:00'),
+        desde: new Date('2026-04-06T00:00:00-04:00'),
         hasta: new Date('2026-04-13T23:59:59-04:00'),
     }
 };
@@ -486,8 +486,11 @@ function cambiarCantidadCarrito(idx, delta) {
     actualizarUI();
 }
 
-function agregarAlCarrito(id, titulo, img, precio) {
-    const inp = document.getElementById('cant-'+id);
+function agregarAlCarrito(id, titulo, img, precio, inputId) {
+    // inputId permite pasar el id del input con prefijo (sc-, pr-, pk-)
+    // Si no se pasa, usa el id del producto directamente (vista todos)
+    const resolvedId = inputId || id;
+    const inp = document.getElementById('cant-'+resolvedId);
     const cantidad = inp ? parseInt(inp.value) : 1;
     const existe = carrito.find(p => p.id === id);
     if (existe) existe.cantidad += cantidad;
