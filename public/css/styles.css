@@ -210,29 +210,29 @@ body {
 /* --- 5. BANNER HERO --- */
 .banner-section {
     width: 100%;
-    height: 180px;
-    background: linear-gradient(135deg, var(--piko-pastel) 0%, #ffe8f0 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    margin: 10px 0 15px 0;
+    line-height: 0;
+    margin: 0;
+    padding: 0;
 }
 
 .banner-section img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    display: block;
+}
+
+/* --- 6. SEPARACIÓN BANNER → PRODUCTOS --- */
+#main-container {
+    padding-top: 28px; /* <-- espacio entre banner y las cards */
 }
 
 @media (min-width: 768px) {
-    .banner-section {
-        height: 280px;
-        margin: 15px 0 25px 0;
+    #main-container {
+        padding-top: 38px;
     }
 }
 
-/* --- 6. CATEGORÍA TÍTULOS --- */
+/* --- 7. CATEGORÍA TÍTULOS --- */
 .categoria-titulo {
     font-size: 1rem;
     font-weight: 800;
@@ -252,7 +252,7 @@ body {
     }
 }
 
-/* --- 7. GRID DE PRODUCTOS (SIN ESPACIOS PERDIDOS) --- */
+/* --- 8. GRID DE PRODUCTOS --- */
 .productos-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -281,7 +281,7 @@ body {
     }
 }
 
-/* --- 8. CARDS DE PRODUCTO --- */
+/* --- 9. CARDS DE PRODUCTO --- */
 .card {
     background: #fff;
     border-radius: 10px;
@@ -304,18 +304,19 @@ body {
     transform: scale(0.98);
 }
 
-/* IMAGEN - ALTURA FIJA */
+/* IMAGEN — más cuadrada y más grande */
 .card img {
     width: 100%;
-    height: 150px;
+    aspect-ratio: 1 / 1;   /* perfectamente cuadrada */
     object-fit: cover;
     background: var(--piko-bg);
     flex-shrink: 0;
 }
 
+/* en tablets/desktop mantenemos el ratio cuadrado */
 @media (min-width: 768px) {
     .card img {
-        height: 180px;
+        aspect-ratio: 1 / 1;
     }
 }
 
@@ -389,7 +390,7 @@ body {
     }
 }
 
-/* --- 9. SELECTOR DE CANTIDAD --- */
+/* --- 10. SELECTOR DE CANTIDAD --- */
 .cantidad-selector {
     display: flex;
     align-items: center;
@@ -442,7 +443,7 @@ body {
     margin: 0;
 }
 
-/* --- 10. BOTÓN AÑADIR --- */
+/* --- 11. BOTÓN AÑADIR --- */
 .btn-add {
     width: 100%;
     padding: 6px 8px;
@@ -475,7 +476,7 @@ body {
     }
 }
 
-/* --- 11. MODAL DE CARRITO --- */
+/* --- 12. MODAL DE CARRITO --- */
 .modal-overlay {
     position: fixed;
     top: 0; 
@@ -549,7 +550,97 @@ body {
     line-height: 1.4;
 }
 
-/* --- 12. ESTILOS ADICIONALES --- */
+/* Item del carrito con selector de cantidad inline */
+.carrito-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 10px;
+    align-items: center;
+}
+
+.carrito-item img {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.carrito-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.carrito-item-nombre {
+    font-weight: 600;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.carrito-item-precio {
+    font-size: 0.78rem;
+    color: var(--piko-pink);
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+.carrito-item-controles {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #f5f5f5;
+    border-radius: 6px;
+    padding: 2px 5px;
+    flex-shrink: 0;
+}
+
+.carrito-item-controles button {
+    background: none;
+    border: none;
+    color: var(--piko-pink);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: 0.2s;
+    padding: 0;
+}
+
+.carrito-item-controles button:hover {
+    background: var(--piko-pink);
+    color: white;
+}
+
+.carrito-item-controles span {
+    font-size: 0.8rem;
+    font-weight: 700;
+    min-width: 18px;
+    text-align: center;
+    color: var(--piko-dark);
+}
+
+.carrito-item-borrar {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0 2px;
+}
+
+/* --- 13. ESTILOS ADICIONALES --- */
 .hidden {
     display: none !important;
 }
@@ -562,7 +653,7 @@ body {
     width: 100%;
 }
 
-/* --- 13. FOOTER --- */
+/* --- 14. FOOTER --- */
 footer {
     background: var(--piko-dark);
     color: #fff;
@@ -586,7 +677,7 @@ footer p {
     }
 }
 
-/* --- 14. CART ICON --- */
+/* --- 15. CART ICON --- */
 .cart-wrapper {
     position: relative;
     cursor: pointer;

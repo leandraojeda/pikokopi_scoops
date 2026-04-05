@@ -3,12 +3,10 @@ const express = require('express');
 const { google } = require('googleapis');
 const PDFDocument = require('pdfkit');
 const path = require('path');
-const cors = require('cors');
 
 const app = express();
 
 // --- CONFIGURACIÓN DE MIDDLEWARES ---
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -18,25 +16,18 @@ app.set('views', path.join(__dirname, 'views'));
 // --- CONFIGURACIÓN DE GOOGLE SHEETS ---
 const SPREADSHEET_ID = '1bIaOsBjsI9m-5l2uGFi48SQGEjQFtnYt8T4rH5HFElg';
 
-// Limpieza profunda de variables de entorno para Render
 const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
 const rawKey = process.env.GOOGLE_PRIVATE_KEY;
-
-// Esta línea es CRUCIAL: Convierte el texto "\n" en saltos de línea reales y quita comillas
 const privateKey = rawKey 
     ? rawKey.replace(/\\n/g, '\n').replace(/"/g, '').replace(/'/g, '').trim() 
     : undefined;
 
-// Diagnóstico en los Logs de Render
 console.log("--- ESTADO DE CREDENCIALES ---");
-console.log("EMAIL DETECTADO:", clientEmail ? "SÍ ✅" : "NO ❌");
-console.log("KEY DETECTADA:", privateKey ? "SÍ ✅" : "NO ❌");
+console.log("EMAIL:", clientEmail ? "✅" : "❌");
+console.log("KEY:", privateKey ? "✅" : "❌");
 
 const auth = new google.auth.GoogleAuth({
-    credentials: {
-        client_email: clientEmail,
-        private_key: privateKey
-    },
+    credentials: { client_email: clientEmail, private_key: privateKey },
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
@@ -58,27 +49,111 @@ const listaProductos = [
     { id: '14', titulo: 'Pack de My Melody', cat: 'packs', precio: 90, img: '/img/pack-mymelody.jpg' }
 ];
 
-// --- FUNCIÓN DISEÑO PDF ---
+// --- FUNCIÓN DISEÑO PDF MEJORADO ---
 function dibujarPDF(doc, data) {
     const colorPrincipal = '#ff85a2';
-    doc.fillColor('#2c2c2c').fontSize(22).font('Helvetica-Bold').text('Piko Kopi Shop', { align: 'center' });
-    doc.fillColor(colorPrincipal).fontSize(16).text('Recibo de Pedido #' + data.nro, { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(10).fillColor('#333').font('Helvetica');
-    doc.text(`Cliente: ${data.nombre}`);
-    doc.text(`WhatsApp: ${data.celular}`);
-    doc.text(`Ciudad: ${data.ciudad}`);
-    doc.moveDown();
-    doc.text('--------------------------------------------------');
+    const colorOscuro = '#2c2c2c';
+    const colorGris = '#666666';
+    const colorGrisClaro = '#999999';
+    const colorLinea = '#e8e8e8';
+    const colorFondo = '#fafafa';
+
+    const margin = 30;
+    const pageWidth = doc.page.width;
+    const contentWidth = pageWidth - 2 * margin;
+
+    // Título
+    doc.fillColor(colorOscuro).fontSize(36).font('Helvetica-Bold');
+    doc.text('Recibo', margin, 30, { align: 'center', width: contentWidth });
+
+    // Número de pedido
+    doc.fillColor(colorPrincipal).fontSize(24).font('Helvetica-Bold');
+    doc.text('#' + data.nro, margin, 75, { align: 'center', width: contentWidth });
+    doc.moveDown(1);
+
+    // Cuadro de información
+    const boxY = doc.y + 10;
+    const boxHeight = 110;
     
-    if (data.carrito && Array.isArray(data.carrito)) {
-        data.carrito.forEach(item => {
-            doc.text(`${item.titulo} (${item.variante || 'Único'}) x${item.cantidad} -- ${(item.precio * item.cantidad).toFixed(2)} BS`);
-        });
+    doc.rect(margin, boxY, contentWidth, boxHeight).fill(colorFondo);
+    doc.rect(margin, boxY, contentWidth, boxHeight).stroke({ color: colorLinea, width: 1.5 });
+
+    doc.fillColor(colorGrisClaro).fontSize(7).font('Helvetica-Bold');
+    doc.text('INFORMACION DEL PEDIDO', margin + 12, boxY + 8, { width: contentWidth - 24 });
+
+    doc.fontSize(9).font('Helvetica').fillColor(colorOscuro);
+    doc.text(data.nombre, margin + 12, boxY + 22, { width: contentWidth - 24 });
+
+    doc.fontSize(8).fillColor(colorGris);
+    doc.text('Tel: ' + data.celular, margin + 12, boxY + 39, { width: contentWidth - 24 });
+    doc.text('Ciudad: ' + data.ciudad, margin + 12, boxY + 54, { width: contentWidth - 24 });
+    
+    if(data.envio) {
+        doc.text('Envío: ' + data.envio, margin + 12, boxY + 69, { width: contentWidth - 24 });
     }
-    
-    doc.text('--------------------------------------------------');
-    doc.fontSize(14).fillColor(colorPrincipal).font('Helvetica-Bold').text(`TOTAL: ${data.total} BS`, { align: 'right' });
+
+    const fecha = new Date().toLocaleDateString('es-BO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const hora = new Date().toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
+    doc.fontSize(7).fillColor(colorGrisClaro);
+    doc.text(fecha + ' a las ' + hora, margin + 12, boxY + 84, { width: contentWidth - 24 });
+
+    doc.y = boxY + boxHeight + 15;
+
+    // Línea separadora
+    doc.moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke({ color: colorLinea, width: 1 });
+    doc.moveDown(1);
+
+    // Tabla de productos
+    const headerY = doc.y;
+    doc.rect(margin, headerY - 2, contentWidth, 15).fill(colorFondo);
+    doc.rect(margin, headerY - 2, contentWidth, 15).stroke({ color: colorLinea, width: 1 });
+
+    doc.fillColor(colorOscuro).fontSize(7).font('Helvetica-Bold');
+    doc.text('Producto', margin + 8, headerY + 2, { width: contentWidth * 0.60 });
+    doc.text('Cant.', margin + contentWidth * 0.63, headerY + 2, { width: 40 });
+    doc.text('Total', pageWidth - margin - 45, headerY + 2, { width: 40, align: 'right' });
+
+    doc.moveDown(1.5);
+
+    // Productos
+    data.carrito.forEach((item, index) => {
+        const itemY = doc.y;
+        doc.fillColor(colorOscuro).fontSize(8).font('Helvetica');
+        doc.text(item.titulo, margin + 8, itemY, { width: contentWidth * 0.60 });
+
+        doc.fillColor(colorGris).fontSize(8).font('Helvetica');
+        doc.text('x' + item.cantidad, margin + contentWidth * 0.63, itemY, { width: 40 });
+        doc.text((item.precio * item.cantidad).toFixed(2) + ' BS', pageWidth - margin - 45, itemY, { width: 40, align: 'right' });
+
+        doc.moveDown(1.3);
+
+        if(index < data.carrito.length - 1) {
+            doc.moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke({ color: '#f5f5f5', width: 0.5 });
+            doc.moveDown(0.4);
+        }
+    });
+
+    // Línea final
+    doc.moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke({ color: colorLinea, width: 1.5 });
+    doc.moveDown(1);
+
+    // Total
+    const totalY = doc.y;
+    doc.fillColor(colorOscuro).fontSize(9).font('Helvetica');
+    doc.text('Total a pagar', margin + 8, totalY, { width: contentWidth * 0.60 });
+    doc.fillColor(colorPrincipal).fontSize(16).font('Helvetica-Bold');
+    doc.text(data.total + ' BS', pageWidth - margin - 50, totalY, { width: 50, align: 'right' });
+
+    doc.moveDown(2.2);
+
+    // Cierre
+    doc.moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke({ color: colorLinea, width: 0.5 });
+    doc.moveDown(1);
+    doc.fillColor(colorPrincipal).fontSize(9).font('Helvetica');
+    doc.text('Gracias por elegir Piko Kopi', margin, doc.y, { align: 'center', width: contentWidth });
+    doc.moveDown(0.8);
+    doc.fontSize(6).fillColor(colorGrisClaro).font('Helvetica');
+    doc.text('Envía este recibo por WhatsApp para completar tu pedido', margin, doc.y, { align: 'center', width: contentWidth });
 }
 
 // --- RUTAS ---
@@ -89,17 +164,17 @@ app.get('/', (req, res) => {
 
 app.post('/confirmar-pedido', async (req, res) => {
     const data = req.body;
-    console.log("Procesando pedido Nro:", data.nro);
+    console.log("📦 Procesando pedido:", data.nro);
 
     try {
-        const productosResumen = data.carrito.map(p => `${p.titulo} (${p.variante}) x${p.cantidad}`).join(', ');
+        const productosResumen = data.carrito.map(p => `${p.titulo} x${p.cantidad}`).join(' | ');
 
         // 1. Google Sheets
         try {
             const sheets = google.sheets({ version: 'v4', auth });
             await sheets.spreadsheets.values.append({
                 spreadsheetId: SPREADSHEET_ID,
-                range: 'Sheet1!A:G', // ASEGÚRATE QUE EN TU EXCEL DIGA "Sheet1"
+                range: 'Sheet1!A:H',
                 valueInputOption: 'USER_ENTERED',
                 requestBody: {
                     values: [[
@@ -107,33 +182,34 @@ app.post('/confirmar-pedido', async (req, res) => {
                         data.nombre,
                         data.celular,
                         data.ciudad,
-                        'WhatsApp',
+                        data.envio || 'Sin especificar',
                         data.total,
-                        productosResumen
+                        productosResumen,
+                        '#' + data.nro
                     ]]
                 }
             });
-            console.log("✅ Datos enviados a Google Sheets");
+            console.log("✅ Guardado en Sheets");
         } catch (sheetErr) {
-            console.error("❌ Error Sheets:", sheetErr.message);
+            console.error("⚠️ Error Sheets:", sheetErr.message);
         }
 
-        // 2. PDF (Flujo de stream corregido)
-        const doc = new PDFDocument({ size: 'A5', margin: 40 });
+        // 2. PDF
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=Pedido_${data.nro}.pdf`);
+        res.setHeader('Content-Disposition', `attachment; filename=Recibo_${data.nro}.pdf`);
 
+        const doc = new PDFDocument({ size: 'A5', margin: 40 });
         doc.pipe(res);
         dibujarPDF(doc, data);
         doc.end();
 
     } catch (error) {
-        console.error("❌ Error Crítico:", error);
-        if (!res.headersSent) res.status(500).send("Error en el servidor");
+        console.error("❌ Error:", error);
+        if (!res.headersSent) res.status(500).send("Error al procesar");
     }
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor activo en puerto ${PORT}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Piko Kopi en puerto ${PORT}`);
 });
