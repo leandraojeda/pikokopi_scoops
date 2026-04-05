@@ -184,13 +184,40 @@ function dibujarPDF(doc, data) {
     doc.moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke({ color: colorLinea, width: 1.5 });
     doc.moveDown(1);
 
+    // Subtotal + descuento si aplica
+    if (data.descuento && parseFloat(data.descuentoMonto) > 0) {
+        const subY = doc.y;
+        doc.fillColor(colorGris).fontSize(8).font('Helvetica');
+        doc.text('Subtotal', margin + 8, subY, { width: contentWidth * 0.60 });
+        doc.text(data.subtotal + ' BS', pageWidth - margin - 45, subY, { width: 40, align: 'right' });
+        doc.moveDown(1.1);
+
+        const descY = doc.y;
+        doc.fillColor('#2d7a4f').fontSize(8).font('Helvetica-Bold');
+        doc.text('Descuento (' + data.descuento + ')', margin + 8, descY, { width: contentWidth * 0.60 });
+        doc.text('−' + data.descuentoMonto + ' BS', pageWidth - margin - 45, descY, { width: 40, align: 'right' });
+        doc.moveDown(1.1);
+
+        doc.moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke({ color: colorLinea, width: 0.5 });
+        doc.moveDown(0.8);
+    }
+
     const totalY = doc.y;
     doc.fillColor(colorOscuro).fontSize(9).font('Helvetica');
     doc.text('Total a pagar', margin + 8, totalY, { width: contentWidth * 0.60 });
     doc.fillColor(colorPrincipal).fontSize(16).font('Helvetica-Bold');
     doc.text(data.total + ' BS', pageWidth - margin - 50, totalY, { width: 50, align: 'right' });
 
-    doc.moveDown(2.2);
+    doc.moveDown(1.5);
+
+    // Nota costo de envío
+    doc.fillColor(colorGrisClaro).fontSize(6.5).font('Helvetica');
+    const notaEnvio = data.pagoEnvio
+        ? '⚠ Costo de envío (' + data.pagoEnvio + ') no incluido — se coordina por WhatsApp'
+        : '⚠ Costo de envío no incluido en este recibo — se coordina por WhatsApp';
+    doc.text(notaEnvio, margin, doc.y, { align: 'center', width: contentWidth });
+
+    doc.moveDown(1.2);
     doc.moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke({ color: colorLinea, width: 0.5 });
     doc.moveDown(1);
     doc.fillColor(colorPrincipal).fontSize(9).font('Helvetica');
@@ -235,6 +262,9 @@ app.post('/confirmar-pedido', async (req, res) => {
                         data.celular,
                         data.ciudad,
                         data.envio || 'Sin especificar',
+                        data.pagoEnvio || 'N/A',
+                        data.descuento || 'Sin descuento',
+                        data.descuentoMonto || '0',
                         data.total,
                         productosResumen,
                         '#' + data.nro,
