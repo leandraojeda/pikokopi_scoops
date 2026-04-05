@@ -538,10 +538,20 @@ async function enviarPedido() {
     btn.innerText = 'PROCESANDO...';
 
     try {
-        // ── PASO 1: obtener número de pedido global desde el servidor ──────────
-        const nroResp = await fetch('/nuevo-numero');
-        const nroData = await nroResp.json();
-        const nroPedido = nroData.nro; // ej. "0007"
+        // ── PASO 1: obtener número único desde el servidor ─────────────────────
+        let nroPedido;
+        try {
+            const nroResp = await fetch('/nuevo-numero');
+            if (!nroResp.ok) throw new Error('HTTP ' + nroResp.status);
+            const nroData = await nroResp.json();
+            if (!nroData.nro || nroData.nro === 'undefined') throw new Error('nro invalido');
+            nroPedido = nroData.nro;
+        } catch (nroErr) {
+            console.error('Error obteniendo número:', nroErr);
+            btn.disabled = false;
+            btn.innerText = 'CONFIRMAR PEDIDO';
+            return Swal.fire('Error', 'No se pudo generar el número de pedido. Intenta de nuevo.', 'error');
+        }
 
         // ── PASO 2: confirmar pedido y recibir PDF ─────────────────────────────
         const response = await fetch('/confirmar-pedido', {
@@ -554,20 +564,16 @@ async function enviarPedido() {
             const blob = await response.blob();
             const pdfUrl = window.URL.createObjectURL(blob);
 
-            // Descarga automática
             const a = document.createElement('a');
             a.href = pdfUrl; a.download = 'Recibo_' + nroPedido + '.pdf'; a.click();
 
-            // Guardar items para el mensaje WA antes de limpiar
             localStorage.setItem('piko_last_items', JSON.stringify(carrito));
 
-            // Limpiar carrito, volver al paso 1 (datos de envío se conservan)
             carrito = [];
             actualizarUI();
             irAPaso1();
             cerrarCarrito();
 
-            // Mensaje de WhatsApp
             const mensajeWA = encodeURIComponent(
                 '¡Hola! 🌸 Soy *' + nombre + '*\n' +
                 'Pedido N° *' + nroPedido + '*\n' +
@@ -588,8 +594,11 @@ async function enviarPedido() {
                 showConfirmButton: false,
                 showCloseButton: true
             });
+        } else {
+            Swal.fire('Error', 'No pudimos procesar el pedido. Código: ' + response.status, 'error');
         }
     } catch(e) {
+        console.error('Error en enviarPedido:', e);
         Swal.fire('Error', 'No pudimos procesar el pedido.', 'error');
     } finally {
         btn.disabled = false;
