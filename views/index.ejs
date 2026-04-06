@@ -106,24 +106,13 @@
             const prods  = productos.filter(p => p.cat === 'productos');
         %>
 
-        <div id="vista-todos" style="width: 100%;">
+        <!-- ── VISTA TODOS ──────────────────────────────────────────── -->
+        <div id="vista-todos" style="width:100%;">
             <% if (scoops.length > 0) { %>
                 <div class="categoria-titulo">🍦 Scoops</div>
                 <div class="productos-container">
                     <% scoops.forEach(producto => { %>
-                        <div class="card">
-                            <img src="<%= producto.img %>" alt="<%= producto.titulo %>" loading="lazy">
-                            <div class="card-info">
-                                <h3><%= producto.titulo %></h3>
-                                <div class="price"><span><%= producto.precio %></span> BS</div>
-                                <div class="cantidad-selector">
-                                    <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                    <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                    <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
-                                </div>
-                                <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>)">AÑADIR</button>
-                            </div>
-                        </div>
+                        <%- include('partials/card', { producto, prefix: '' }) %>
                     <% }) %>
                 </div>
             <% } %>
@@ -131,19 +120,7 @@
                 <div class="categoria-titulo">📦 Packs</div>
                 <div class="productos-container">
                     <% packs.forEach(producto => { %>
-                        <div class="card">
-                            <img src="<%= producto.img %>" alt="<%= producto.titulo %>" loading="lazy">
-                            <div class="card-info">
-                                <h3><%= producto.titulo %></h3>
-                                <div class="price"><span><%= producto.precio %></span> BS</div>
-                                <div class="cantidad-selector">
-                                    <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                    <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                    <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
-                                </div>
-                                <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>)">AÑADIR</button>
-                            </div>
-                        </div>
+                        <%- include('partials/card', { producto, prefix: '' }) %>
                     <% }) %>
                 </div>
             <% } %>
@@ -151,80 +128,35 @@
                 <div class="categoria-titulo">✨ Productos</div>
                 <div class="productos-container">
                     <% prods.forEach(producto => { %>
-                        <div class="card">
-                            <img src="<%= producto.img %>" alt="<%= producto.titulo %>" loading="lazy">
-                            <div class="card-info">
-                                <h3><%= producto.titulo %></h3>
-                                <div class="price"><span><%= producto.precio %></span> BS</div>
-                                <div class="cantidad-selector">
-                                    <button class="cantidad-btn" onclick="restarCantidad('<%= producto.id %>')">−</button>
-                                    <input type="number" id="cant-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                    <button class="cantidad-btn" onclick="sumarCantidad('<%= producto.id %>')">+</button>
-                                </div>
-                                <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>)">AÑADIR</button>
-                            </div>
-                        </div>
+                        <%- include('partials/card', { producto, prefix: '' }) %>
                     <% }) %>
                 </div>
             <% } %>
         </div>
 
+        <!-- ── VISTA SCOOPS ─────────────────────────────────────────── -->
         <div id="vista-scoops" style="display:none; width:100%;">
             <div class="productos-container">
                 <% scoops.forEach(producto => { %>
-                    <div class="card">
-                        <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
-                        <div class="card-info">
-                            <h3><%= producto.titulo %></h3>
-                            <div class="price"><span><%= producto.precio %></span> BS</div>
-                            <div class="cantidad-selector">
-                                <button class="cantidad-btn" onclick="restarCantidad('sc-<%= producto.id %>')">−</button>
-                                <input type="number" id="cant-sc-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                <button class="cantidad-btn" onclick="sumarCantidad('sc-<%= producto.id %>')">+</button>
-                            </div>
-                            <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>, 'sc-<%= producto.id %>')">AÑADIR</button>
-                        </div>
-                    </div>
+                    <%- include('partials/card', { producto, prefix: 'sc-' }) %>
                 <% }) %>
             </div>
         </div>
 
+        <!-- ── VISTA PRODUCTOS ──────────────────────────────────────── -->
         <div id="vista-productos" style="display:none; width:100%;">
             <div class="productos-container">
                 <% prods.forEach(producto => { %>
-                    <div class="card">
-                        <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
-                        <div class="card-info">
-                            <h3><%= producto.titulo %></h3>
-                            <div class="price"><span><%= producto.precio %></span> BS</div>
-                            <div class="cantidad-selector">
-                                <button class="cantidad-btn" onclick="restarCantidad('pr-<%= producto.id %>')">−</button>
-                                <input type="number" id="cant-pr-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                <button class="cantidad-btn" onclick="sumarCantidad('pr-<%= producto.id %>')">+</button>
-                            </div>
-                            <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>, 'pr-<%= producto.id %>')">AÑADIR</button>
-                        </div>
-                    </div>
+                    <%- include('partials/card', { producto, prefix: 'pr-' }) %>
                 <% }) %>
             </div>
         </div>
 
+        <!-- ── VISTA PACKS ───────────────────────────────────────────── -->
         <div id="vista-packs" style="display:none; width:100%;">
             <div class="productos-container">
                 <% packs.forEach(producto => { %>
-                    <div class="card">
-                        <img src="<%= producto.img %>" alt="<%= producto.titulo %>">
-                        <div class="card-info">
-                            <h3><%= producto.titulo %></h3>
-                            <div class="price"><span><%= producto.precio %></span> BS</div>
-                            <div class="cantidad-selector">
-                                <button class="cantidad-btn" onclick="restarCantidad('pk-<%= producto.id %>')">−</button>
-                                <input type="number" id="cant-pk-<%= producto.id %>" class="cantidad-input" value="1" min="1">
-                                <button class="cantidad-btn" onclick="sumarCantidad('pk-<%= producto.id %>')">+</button>
-                            </div>
-                            <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>', '<%= producto.titulo %>', '<%= producto.img %>', <%= producto.precio %>, 'pk-<%= producto.id %>')">AÑADIR</button>
-                        </div>
-                    </div>
+                    <%- include('partials/card', { producto, prefix: 'pk-' }) %>
                 <% }) %>
             </div>
         </div>
@@ -486,17 +418,65 @@ function cambiarCantidadCarrito(idx, delta) {
     actualizarUI();
 }
 
-function agregarAlCarrito(id, titulo, img, precio, inputId) {
-    // inputId permite pasar el id del input con prefijo (sc-, pr-, pk-)
-    // Si no se pasa, usa el id del producto directamente (vista todos)
-    const resolvedId = inputId || id;
-    const inp = document.getElementById('cant-'+resolvedId);
+// ── VARIANTE DE PRECIO ───────────────────────────────────────────────────────
+function cambiarVariante(pid) {
+    const sel = document.getElementById('variante-'+pid);
+    if (!sel) return;
+    const precio = parseInt(sel.value);
+    const display = document.getElementById('precio-display-'+pid);
+    if (display) display.innerText = precio + ' BS';
+}
+
+// ── AGREGAR AL CARRITO ────────────────────────────────────────────────────────
+// pid       = id con prefijo de vista (para leer el input correcto)
+// modoVar   = 'variante' si el producto tiene selector de precio variable
+// modoSub   = 'subtipo'  si el producto tiene selector de subtipo
+function agregarAlCarrito(id, titulo, img, pid, modoVar, modoSub) {
+    const inp = document.getElementById('cant-'+pid);
     const cantidad = inp ? parseInt(inp.value) : 1;
-    const existe = carrito.find(p => p.id === id);
-    if (existe) existe.cantidad += cantidad;
-    else carrito.push({ id, titulo, img, precio, cantidad });
+
+    // Precio: desde el selector de variante o desde el atributo fijo
+    let precio;
+    if (modoVar === 'variante') {
+        const sel = document.getElementById('variante-'+pid);
+        precio = sel ? parseInt(sel.value) : 0;
+    } else {
+        // Leer el precio del texto de la card (primer número antes de "BS")
+        const priceEl = inp ? inp.closest('.card-info').querySelector('.price') : null;
+        precio = priceEl ? parseInt(priceEl.innerText) : 0;
+    }
+
+    // Subtipo
+    let subtipo = '';
+    if (modoSub === 'subtipo') {
+        const selSub = document.getElementById('subtipo-'+pid);
+        subtipo = selSub ? selSub.value : '';
+    }
+
+    // Etiqueta de variante para mostrar en carrito y recibo
+    let etiqueta = titulo;
+    if (modoVar === 'variante') {
+        const selVar = document.getElementById('variante-'+pid);
+        if (selVar) {
+            const opt = selVar.options[selVar.selectedIndex];
+            // data-label tiene solo el nombre sin el precio
+            const label = opt.getAttribute('data-label') || opt.text.split(' — ')[0];
+            etiqueta += ' (' + label + ')';
+        }
+    }
+    if (subtipo) etiqueta += ' — ' + subtipo;
+
+    // Clave única = id + variante + subtipo (para no mezclar variantes distintas)
+    const clave = id + '|' + (modoVar === 'variante' ? precio : '') + '|' + subtipo;
+    const existe = carrito.find(p => p.clave === clave);
+    if (existe) {
+        existe.cantidad += cantidad;
+    } else {
+        carrito.push({ id, clave, titulo: etiqueta, img, precio, cantidad });
+    }
+
     if (inp) inp.value = 1;
-    Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:1500 }).fire({ icon:'success', title:'¡'+titulo+' añadido! ✨' });
+    Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:1500 }).fire({ icon:'success', title:'¡Añadido! ✨' });
     actualizarUI();
 }
 
@@ -537,22 +517,22 @@ function actualizarUI() {
 
 // ── TRANSPORTADORA ─────────────────────────────────────────────────────────────
 const transportadorasPorCiudad = {
-    'La Paz':       ['Amazon Express','El Mexicano','Bolivar','El Dorado','Quirquincho','Copacabana','Otra'],
-    'El Alto':      ['Amazon Express','El Mexicano','El Dorado','Quirquincho','Copacabana','Otra'],
-    'Oruro':        ['San Miguel','Bustillos','Amazon Express','Otra'],
-    'Potosí':       ['Rapiditos del Sur','Amazon Express','Otra'],
-    'Villazon':     ['Rapiditos del Sur','Otra'],
-    'Tupiza':       ['Rapiditos del Sur','Otra'],
-    'Uyuni':        ['Rapiditos del Sur','Otra'],
-    'Cochabamba':   ['Bolivar','El Dorado','Quirquincho','Copacabana','Amazon Express','Otra'],
-    'Quillacollo':  ['Bolivar','El Dorado','Quirquincho','Copacabana','Amazon Express','Otra'],
-    'Tarija':       ['Rapiditos del Sur','El Mexicano','Amazon Express','Otra'],
-    'Beremejo':     ['Rapiditos del Sur','El Mexicano','Otra'],
-    'Camargo':      ['El Mexicano','Rapiditos del Sur','Otra'],
-    'Santa Cruz':   ['Amazon Express','El Mexicano','El Dorado','Copacabana','Otra'],
-    'Beni':         ['Amazon Express','Otra'],
-    'Pando':        ['Amazon Express','Otra'],
-    'Yotala':       ['Amazon Express','Rapiditos del Sur','Otra']
+    'La Paz':       ['Amazon Express','El Mexicano','Bolivar','El Dorado','Quirquincho','Copacabana','Cualquier Transportadora','Otra'],
+    'El Alto':      ['Amazon Express','El Mexicano','El Dorado','Quirquincho','Copacabana','Cualquier Transportadora','Otra'],
+    'Oruro':        ['San Miguel','Bustillos','Amazon Express','Cualquier Transportadora','Otra'],
+    'Potosí':       ['Rapiditos del Sur','Amazon Express','Cualquier Transportadora','Otra'],
+    'Villazon':     ['Cualquier Transportadora','Otra'],
+    'Tupiza':       ['Cualquier Transportadora','Otra'],
+    'Uyuni':        ['Cualquier Transportadora','Otra'],
+    'Cochabamba':   ['Bolivar','El Dorado','Quirquincho','Copacabana','Amazon Express','Cualquier Transportadora','Otra'],
+    'Quillacollo':  ['Bolivar','El Dorado','Quirquincho','Copacabana','Amazon Express','Cualquier Transportadora','Otra'],
+    'Tarija':       ['Rapiditos del Sur','El Mexicano','Amazon Express','Cualquier Transportadora','Otra'],
+    'Beremejo':     ['Rapiditos del Sur','El Mexicano','Cualquier Transportadora','Otra'],
+    'Camargo':      ['El Mexicano','Cualquier Transportadora','Otra'],
+    'Santa Cruz':   ['Amazon Express','El Mexicano','El Dorado','Copacabana','Cualquier Transportadora','Otra'],
+    'Beni':         ['Amazon Express','Cualquier Transportadora','Otra'],
+    'Pando':        ['Amazon Express','Cualquier Transportadora','Otra'],
+    'Yotala':       ['Cualquier Transportadora','Otra']
 };
 
 function gestionarTransportadora() {

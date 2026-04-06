@@ -1,0 +1,41 @@
+<%
+const pid         = prefix + producto.id;
+const tieneVar    = !!(producto.variantePrecio && producto.variantePrecio.length > 0);
+const tieneSub    = !!(producto.subtipos && producto.subtipos.length > 0);
+const modoVar     = tieneVar ? 'variante' : '';
+const modoSub     = tieneSub ? 'subtipo'  : '';
+const precioBase  = tieneVar ? producto.variantePrecio[0].precio : producto.precio;
+%>
+<div class="card">
+    <img src="<%= producto.img %>" alt="<%= producto.titulo %>" loading="lazy">
+    <div class="card-info">
+        <h3><%= producto.titulo %></h3>
+
+        <% if (tieneVar) { %>
+            <select id="variante-<%= pid %>" class="select-tipo" onchange="cambiarVariante('<%= pid %>')">
+                <% producto.variantePrecio.forEach(function(v, i) { %>
+                    <option value="<%= v.precio %>" data-label="<%= v.label %>"<%= i===0 ? ' selected' : '' %>><%= v.label %> — <%= v.precio %> </option>
+                <% }); %>
+            </select>
+            <div class="price" id="precio-display-<%= pid %>"><%= precioBase %> </div>
+        <% } else { %>
+            <div class="price"><%= producto.precio %> </div>
+        <% } %>
+
+        <% if (tieneSub) { %>
+            <select id="subtipo-<%= pid %>" class="select-tipo">
+                <% producto.subtipos.forEach(function(s, i) { %>
+                    <option value="<%= s %>"<%= i===0 ? ' selected' : '' %>><%= s %></option>
+                <% }); %>
+            </select>
+        <% } %>
+
+        <div class="cantidad-selector">
+            <button class="cantidad-btn" onclick="restarCantidad('<%= pid %>')">-</button>
+            <input type="number" id="cant-<%= pid %>" class="cantidad-input" value="1" min="1">
+            <button class="cantidad-btn" onclick="sumarCantidad('<%= pid %>')">+</button>
+        </div>
+
+        <button class="btn-add" onclick="agregarAlCarrito('<%= producto.id %>','<%= producto.titulo %>','<%= producto.img %>','<%= pid %>','<%= modoVar %>','<%= modoSub %>')">AÑADIR</button>
+    </div>
+</div>

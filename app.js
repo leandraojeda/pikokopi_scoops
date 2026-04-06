@@ -32,21 +32,48 @@ const auth = new google.auth.GoogleAuth({
 });
 
 // --- PRODUCTOS ---
+// subtipos: array de strings para mostrar selector en la card
+// variantePrecio: array de {label, precio} para scoops con precio variable
 const listaProductos = [
-    { id: '1',  titulo: 'Notas Cabeza Snoopy',           cat: 'productos', precio: 12,  img: '/img/notas-snoopy.jpg' },
-    { id: '2',  titulo: 'Binder Sanrio',                 cat: 'productos', precio: 26,  img: '/img/binder-sanrio.jpg' },
-    { id: '3',  titulo: 'Sticker Black and White Style', cat: 'productos', precio: 8,   img: '/img/sticker-bw.jpg' },
-    { id: '4',  titulo: 'Figuras de Yeso Sanrio',        cat: 'productos', precio: 5,   img: '/img/figuras-yeso.jpg' },
-    { id: '5',  titulo: 'Sellos en Tira',                cat: 'productos', precio: 15,  img: '/img/sellos-tira.jpg' },
-    { id: '6',  titulo: 'Llaveros Snoopy Goma',          cat: 'productos', precio: 7,   img: '/img/llaveros-snoopy.jpg' },
-    { id: '7',  titulo: 'Boligrafo Hello Kitty',         cat: 'productos', precio: 5,   img: '/img/boligrafo-hellokitty.jpg' },
-    { id: '8',  titulo: 'Binder Hello Kitty JEAN',       cat: 'productos', precio: 40,  img: '/img/binder-hellokitty-jean.jpg' },
-    { id: '9',  titulo: 'Scoop Simple',                  cat: 'scoops',   precio: 100, img: '/img/scoop.jpg' },
-    { id: '10', titulo: 'Capsulas Extra',                cat: 'scoops',   precio: 30,  img: '/img/capsulas-extra.jpg' },
-    { id: '11', titulo: 'Scoop + Capsulas Combo',        cat: 'scoops',   precio: 150, img: '/img/scoop-capsulas.jpg' },
-    { id: '12', titulo: 'Pack de Snoopy',                cat: 'packs',    precio: 80,  img: '/img/pack-snoopy.jpg' },
-    { id: '13', titulo: 'Pack de Cinamorroll',           cat: 'packs',    precio: 80,  img: '/img/pack-cinamorroll.jpg' },
-    { id: '14', titulo: 'Pack de My Melody',             cat: 'packs',    precio: 90,  img: '/img/pack-mymelody.jpg' },
+    
+    { id: '1',  titulo: 'Scoop',                         cat: 'scoops',   precio: 100, img: '/img/scoop.jpg',
+      variantePrecio: [
+        { label: '1 Scoop', precio: 99 },
+        { label: '2 Scoops', precio: 189 },
+        { label: '3 Scoops', precio: 280 },
+        { label: '4 Scoops', precio: 370 },
+      ]},
+    { id: '2', titulo: 'Cápsulas Extra',                cat: 'scoops',   precio: 30,  img: '/img/capsulas-extra.jpg',
+      variantePrecio: [
+        { label: '1 Cápsula', precio: 30 },
+        { label: '2 Cápsulas', precio: 55 },
+        { label: '3 Cápsulas', precio: 80 },
+        { label: '4+ Cápsulas (c/u 25 BS)', precio: 25 },
+      ]},
+    { id: '3', titulo: 'Scoop + Cápsulas Combo',        cat: 'scoops',   precio: 150, img: '/img/scoop-capsulas.jpg',
+      variantePrecio: [
+        { label: '1 Scoop + 2 Cápsulas', precio: 150 },
+        { label: '2 Scoops + 2 Cápsulas', precio: 240 },
+      ]},
+    // PACKS
+    { id: '4', titulo: 'Pack de Snoopy',                cat: 'packs',    precio: 95,  img: '/img/pack-snoopy.jpg' },
+    { id: '5', titulo: 'Pack de Cinamorroll',           cat: 'packs',    precio: 80,  img: '/img/pack-cinamorroll.jpg' },
+    { id: '6', titulo: 'Pack de My Melody',             cat: 'packs',    precio: 90,  img: '/img/pack-mymelody.jpg' },
+    // PRODUCTOS
+    { id: '20',  titulo: 'Notas Cabeza Snoopy',           cat: 'productos', precio: 13,  img: '/img/notas-snoopy.jpg',
+      subtipos: ['Rojo','Azul','Verde','Amarillo'] },
+    { id: '21',  titulo: 'Binder Sanrio',                 cat: 'productos', precio: 35,  img: '/img/binder-sanrio.jpg',
+      subtipos: ['Cinamorroll','Hello Kitty','Pompompurin','Pochacco','Kuromi'] },
+    { id: '22',  titulo: 'Sticker Black and White Style', cat: 'productos', precio: 8,   img: '/img/sticker-bw.jpg' },
+    { id: '23',  titulo: 'Figuras de Yeso Sanrio',        cat: 'productos', precio: 5,   img: '/img/figuras-yeso.jpg' },
+    { id: '24',  titulo: 'Sellos en Tira',                cat: 'productos', precio: 20,  img: '/img/sellos-tira.jpg',
+      subtipos: ['Morado','Turquesa','Rosado','Azul'] },
+    { id: '25',  titulo: 'Llaveros Snoopy Goma',          cat: 'productos', precio: 8,   img: '/img/llaveros-snoopy.jpg',
+      subtipos: ['Piloto','Mujer','Normal','Sombrero'] },
+    { id: '26',  titulo: 'Bolígrafo Hello Kitty',         cat: 'productos', precio: 5,   img: '/img/boligrafo-hellokitty.jpg',
+      subtipos: ['Rojo','Rosa','Blanco'] },
+    { id: '27',  titulo: 'Binder Hello Kitty JEAN',       cat: 'productos', precio: 40,  img: '/img/binder-hellokitty-jean.jpg' },
+    // SCOOPS — precio variable según cantidad
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
